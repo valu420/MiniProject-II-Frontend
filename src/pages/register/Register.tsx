@@ -6,7 +6,7 @@ import './Register.css';
 /**
  * Register page component
  * - Allows users to create an account
- * - Includes fields for name, surname, age, email, and password
+ * - Includes fields for name, surname, age, email, password and confirm password
  * - Accessible and styled according to the provided CSS
  * @returns {JSX.Element}
  */
@@ -19,6 +19,7 @@ export const Register: React.FC = () => {
     age: '',
     email: '',
     password: '',
+    confirmPassword: '', // added field
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -47,22 +48,35 @@ export const Register: React.FC = () => {
         !formData.surname ||
         !formData.email ||
         !formData.password ||
-        !formData.age
+        !formData.age ||
+        !formData.confirmPassword
       ) {
         setMessage({
           type: 'error',
           text: 'Por favor completa todos los campos',
         });
+        setIsLoading(false);
+        return;
+      }
+
+      // Password confirmation
+      if (formData.password !== formData.confirmPassword) {
+        setMessage({
+          type: 'error',
+          text: 'Las contraseñas no coinciden',
+        });
+        setIsLoading(false);
         return;
       }
 
       // Validar edad
       const age = parseInt(formData.age);
-      if (age < 1 || age > 120) {
+      if (isNaN(age) || age < 1 || age > 120) {
         setMessage({
           type: 'error',
           text: 'Por favor ingresa una edad válida',
         });
+        setIsLoading(false);
         return;
       }
 
@@ -79,6 +93,7 @@ export const Register: React.FC = () => {
       setFormData((prev) => ({
         ...prev,
         password: '',
+        confirmPassword: '',
       }));
 
       // Enviar datos al backend
@@ -93,6 +108,7 @@ export const Register: React.FC = () => {
         age: '',
         email: '',
         password: '',
+        confirmPassword: '',
       });
 
       console.log('Usuario creado exitosamente:', {
@@ -192,6 +208,19 @@ export const Register: React.FC = () => {
               name="password"
               placeholder="Contraseña"
               value={formData.password}
+              onChange={handleChange}
+              required
+            />
+          </label>
+
+          {/* Confirm password field */}
+          <label htmlFor="confirmPassword">
+            <input
+              id="confirmPassword"
+              type="password"
+              name="confirmPassword"
+              placeholder="Confirmar Contraseña"
+              value={formData.confirmPassword}
               onChange={handleChange}
               required
             />
