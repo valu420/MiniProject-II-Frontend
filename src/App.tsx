@@ -24,6 +24,7 @@ const App: React.FC = () => {
           <Route path="/register" element={<Register />} />
           <Route path="/edit-info" element={<EditInfo />} />
           <Route path="/change-password" element={<ChangePassword />} />
+          
         </Routes>
       </main>
     </BrowserRouter>
