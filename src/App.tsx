@@ -4,7 +4,7 @@ import { HomePage } from "./pages/home/HomePage";
 import { Login } from "./pages/login/Login";
 import { Register } from "./pages/register/Register";
 import { Nav } from "./components/Nav";
-import { About } from "./pages/About";
+import { About } from "./pages/about/About";
 
 
 /**
