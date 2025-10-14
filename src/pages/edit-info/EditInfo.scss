@@ -1,0 +1,178 @@
+// Variables de colores
+$primary-green: #00D084;
+$background-dark: #1a1a1a;
+$text-white: #ffffff;
+$input-gray: #4a4a4a;
+$icon-purple: #c4a7e7;
+
+.edit-info-container {
+  min-height: 100vh;
+  background-color: $background-dark;
+  color: $text-white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  // Contenido del formulario
+  .form-content {
+    max-width: 400px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: rgba($background-dark, 0.8);
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+
+    // Ícono de usuario
+    .profile-icon {
+      width: 100px;
+      height: 100px;
+      background-color: $icon-purple;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 2rem;
+      
+      &::before {
+        content: "👤";
+        font-size: 3rem;
+        color: $background-dark;
+      }
+    }
+
+    // Título
+    h1 {
+      font-size: 2rem;
+      font-weight: 600;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    // Formulario
+    form {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+
+    .form-group {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+
+      label {
+        font-weight: 500;
+        font-size: 1rem;
+        min-width: 80px;
+        text-align: left;
+      }
+
+      input {
+        flex: 1;
+        padding: 1rem;
+        border: none;
+        border-radius: 8px;
+        background-color: $input-gray;
+        color: $text-white;
+        font-size: 1rem;
+        outline: none;
+        transition: background-color 0.3s ease;
+
+        &:focus {
+          background-color: lighten($input-gray, 10%);
+        }
+
+        &::placeholder {
+          color: rgba($text-white, 0.6);
+        }
+      }
+    }
+
+    .submit-btn {
+      background-color: $primary-green;
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 25px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      margin: 1rem auto 0;
+      display: block;
+      transition: background-color 0.3s ease;
+
+      &:hover {
+        background-color: darken($primary-green, 10%);
+      }
+    }
+    }
+
+    // Enlace eliminar cuenta
+    .delete-account {
+      color: $primary-green;
+      text-decoration: underline;
+      font-weight: 500;
+      cursor: pointer;
+      transition: color 0.3s ease;
+
+      &:hover {
+        color: lighten($primary-green, 10%);
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .edit-info-container {
+    padding: 1rem;
+
+    .form-content {
+      padding: 1.5rem;
+
+      .profile-icon {
+        width: 80px;
+        height: 80px;
+        
+        &::before {
+          font-size: 2.5rem;
+        }
+      }
+
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      form {
+        gap: 1rem;
+
+        .form-group {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 0.5rem;
+
+          label {
+            min-width: auto;
+          }
+
+          input {
+            padding: 0.75rem;
+            width: 100%;
+          }
+        }
+
+        .submit-btn {
+          padding: 0.75rem 1.5rem;
+          margin: 1rem auto 0;
+        }
+      }
+    }
+  }
+}
