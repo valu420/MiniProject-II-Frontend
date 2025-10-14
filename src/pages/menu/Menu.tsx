@@ -1,16 +1,66 @@
-import React, { useState } from 'react';
+// ...existing code...
+import React from 'react';
+import { Link } from 'react-router-dom';
 import './Menu.css';
 
+/**
+ * Menu page with header and category grids.
+ * Cards are empty containers (placeholders) to be filled later with images.
+ * @returns {JSX.Element}
+ */
 export const Menu: React.FC = () => {
-    return (
-        <div className="menu-container">
-            <h1 className="menu-title">Menu</h1>
-            <ul className="menu-list">
-                <li className="menu-item">Home</li>
-                <li className="menu-item">About</li>
-                <li className="menu-item">Login</li>
-                <li className="menu-item">Register</li>
-            </ul>
+  const categories = ['Categoria', 'Categoria'];
+
+  return (
+    <div className="menu-page">
+      <header className="menu-header" role="banner">
+        <div className="brand">
+          <div className="brand-logo" aria-hidden="true">L</div>
+          <div className="brand-name">Lumière</div>
         </div>
-    );
+
+        <div className="header-actions">
+          <form className="search-form" role="search" aria-label="Search movies">
+            <input
+              type="search"
+              className="search-input"
+              placeholder="Buscar"
+              aria-label="Buscar"
+            />
+          </form>
+
+          <Link to="/profile" className="user-btn" aria-label="User profile">
+            <span className="user-icon" />
+          </Link>
+        </div>
+      </header>
+
+      <main className="menu-content" role="main">
+        {categories.map((title, idx) => (
+          <section className="category-section" key={idx} aria-labelledby={`cat-${idx}`}>
+            <div className="category-header">
+              <h2 id={`cat-${idx}`}>{title}</h2>
+              <span className="accent-line" aria-hidden="true" />
+            </div>
+
+            <div className="cards-grid" role="list">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <article
+                  key={i}
+                  className="card"
+                  role="listitem"
+                  aria-label={`${title} item ${i + 1}`}
+                >
+                  <div className="card-thumb" />
+                </article>
+              ))}
+            </div>
+          </section>
+        ))}
+      </main>
+    </div>
+  );
 };
+
+export default Menu;
+// ...existing code...

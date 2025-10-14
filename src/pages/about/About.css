@@ -1,0 +1,86 @@
+.about-container {
+  background-color: #000;
+  color: white;
+  font-family: "Poppins", sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Hero */
+.about-hero {
+  text-align: center;
+  max-width: 800px;
+  margin: 100px 20px 60px 20px;
+}
+
+.about-hero h1 {
+  font-size: 2rem;
+  margin-bottom: 20px;
+  color: #7dffad;
+}
+
+.about-hero p {
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+/* Mission */
+.about-mission {
+  text-align: center;
+  max-width: 800px;
+  margin-bottom: 80px;
+}
+
+.about-mission h2 {
+  color: #7dffad;
+  margin-bottom: 15px;
+  font-size: 1.5rem;
+}
+
+/* Team */
+.about-team {
+  text-align: center;
+  margin-bottom: 80px;
+}
+
+.about-team h2 {
+  color: #7dffad;
+  margin-bottom: 30px;
+}
+
+.team-cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 30px;
+}
+
+.team-card {
+  background-color: #1a1a1a;
+  border-radius: 12px;
+  padding: 20px;
+  width: 200px;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  filter: drop-shadow(0 0 8px #00ff8c55);
+}
+
+.team-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 25px #00ff8c88;
+}
+
+
+.team-card h3 {
+  font-size: 1.1rem;
+  margin-bottom: 5px;
+  color: #ffffff;
+}
+
+.team-card p {
+  font-size: 0.9rem;
+  color: #ccc;
+}
+

@@ -1,12 +1,14 @@
 import React from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { Nav } from './components/Nav';
-import { About } from './pages/About';
+import { About } from './pages/about/About';
 import ChangePassword from './pages/change-password/ChangePassword';
 import EditInfo from './pages/edit-info/EditInfo';
 import { HomePage } from './pages/home/HomePage';
 import { Login } from './pages/login/Login';
 import { Register } from './pages/register/Register';
+import { Menu } from './pages/menu/Menu';
+import { ResetPassword } from './pages/reset-password/ResetPassword';
 
 /**
  * Root application component with routing
@@ -24,6 +26,8 @@ const App: React.FC = () => {
           <Route path="/register" element={<Register />} />
           <Route path="/edit-info" element={<EditInfo />} />
           <Route path="/change-password" element={<ChangePassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/menu" element={<Menu />} />
         </Routes>
       </main>
     </BrowserRouter>

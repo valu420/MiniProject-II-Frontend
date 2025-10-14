@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { loginUser, LoginUserData } from '../../api/userApi';
 import './Login.css';
 /**
  * Login page component
@@ -9,39 +10,59 @@ import './Login.css';
  * @returns {JSX.Element}
  */
 export const Login: React.FC = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setSuccessMessage(null);
 
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/auth/login`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email, password }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Login failed');
+      // Validar que los campos estén llenos
+      if (!email || !password) {
+        setError('Por favor completa todos los campos');
+        return;
       }
 
-      const data = await response.json();
-      localStorage.setItem('token', data.token);
-      alert('Login successful!');
-      window.location.href = '/';
-    } catch (err: any) {
-      setError(err.message);
+      // Preparar datos para enviar al backend
+      const userData: LoginUserData = {
+        email,
+        password,
+      };
+
+      // Limpiar inmediatamente el campo de contraseña por seguridad
+      setPassword('');
+
+      // Enviar datos al backend
+      const result = await loginUser(userData);
+
+      // Guardar token en localStorage
+      localStorage.setItem('token', result.token);
+      localStorage.setItem('user', JSON.stringify(result.user));
+
+      // Log seguro (sin contraseña)
+      console.log('Login exitoso:', {
+        user: result.user,
+        message: result.message,
+      });
+
+      // Mostrar mensaje de éxito y redirigir después de 1 segundo
+      setSuccessMessage('¡Inicio de sesión exitoso! Redirigiendo...');
+
+      setTimeout(() => {
+        navigate('/menu');
+      }, 1000);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Error al iniciar sesión';
+      setError(errorMessage);
+      console.error('Error en login:', { email, error: errorMessage });
     } finally {
       setLoading(false);
     }
@@ -79,6 +100,12 @@ export const Login: React.FC = () => {
           {error && (
             <div className="login-error" aria-live="polite">
               {error}
+            </div>
+          )}
+
+          {successMessage && (
+            <div className="login-success" aria-live="polite">
+              {successMessage}
             </div>
           )}
 

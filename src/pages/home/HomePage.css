@@ -1,0 +1,142 @@
+.home-container {
+  background-color: #000;
+  color: white;
+  font-family: "Poppins", sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Header */
+.home-header {
+  width: 90%;
+  max-width: 1200px;
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.logo span {
+  font-weight: 600;
+  font-size: 1.2rem;
+}
+
+nav a {
+  color: white;
+  text-decoration: none;
+  margin-left: 20px;
+  font-size: 0.9rem;
+}
+
+nav a:hover {
+  text-decoration: underline;
+}
+
+/* Hero */
+.hero {
+  text-align: center;
+  margin: 100px 0 50px 0;
+}
+
+.hero h1 {
+  font-size: 1.8rem;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+.btn-primary {
+  margin-top: 20px;
+  background-color: #00c26f;
+  border: none;
+  padding: 10px 28px;
+  color: white;
+  border-radius: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-primary:hover {
+  background-color: #00a65a;
+}
+
+/* Movie List */
+.movie-list {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin: 40px 0;
+  filter: drop-shadow(0 0 15px #00ff8c44);
+}
+
+.movie-list img {
+  width: 140px;
+  height: 210px;
+  object-fit: cover;
+  border-radius: 10px;
+  transition: transform 0.3s;
+}
+
+.movie-list img:hover {
+  transform: scale(1.05);
+}
+
+/* Features */
+.features {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  margin-top: 60px;
+  margin-bottom: 60px;
+}
+
+.feature {
+  background-color: #1a1a1a;
+  padding: 20px;
+  width: 200px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.feature i {
+  font-size: 1.8rem;
+  color: #00c26f;
+  margin-bottom: 10px;
+}
+
+/* Footer */
+.footer {
+  border-top: 1px solid #333;
+  padding: 20px;
+  text-align: center;
+  font-size: 0.8rem;
+  width: 100%;
+}
+
+.footer-links {
+  margin-bottom: 5px;
+}
+
+.footer-links a {
+  color: white;
+  text-decoration: none;
+  margin: 0 10px;
+}
+
+.footer-links a:hover {
+  text-decoration: underline;
+}
