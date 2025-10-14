@@ -39,6 +39,16 @@ export interface ApiError {
   message: string;
 }
 
+export interface UserProfile {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  age: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 /**
  * Secure fetch wrapper that masks sensitive data in DevTools
  * @param url - The URL to fetch
@@ -220,6 +230,68 @@ export const resetPasswordWithToken = async (token: string, newPassword: string)
     return await response.json();
   } catch (error) {
     console.error('Error in resetPasswordWithToken:', { token: token ? '***' : '', error });
+    throw error instanceof Error ? error : new Error('Network error');
+  }
+};
+
+/**
+ * Get user profile by ID
+ * @param userId - The user ID
+ * @param token - Authentication token
+ * @returns Promise with user profile data
+ */
+export const getUserProfile = async (userId: string, token?: string): Promise<UserProfile> => {
+  try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const response = await secureFetch(`${API_BASE_URL}/users/${userId}`, {
+      method: 'GET',
+      headers,
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || 'Error getting user profile');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('getUserProfile error:', { userId: userId ? '***' : '', error });
+    throw error instanceof Error ? error : new Error('Network error');
+  }
+};
+
+/**
+ * Update user profile by ID
+ * @param userId - The user ID
+ * @param profileData - The updated profile data
+ * @param token - Authentication token
+ * @returns Promise with updated user profile data
+ */
+export const updateUserProfile = async (
+  userId: string,
+  profileData: Partial<UserProfile>,
+  token?: string
+): Promise<UserProfile> => {
+  try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const response = await secureFetch(`${API_BASE_URL}/users/${userId}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(profileData),
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || 'Error updating user profile');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('updateUserProfile error:', { userId: userId ? '***' : '', error });
     throw error instanceof Error ? error : new Error('Network error');
   }
 };
