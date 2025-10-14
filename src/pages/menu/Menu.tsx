@@ -29,7 +29,7 @@ export const Menu: React.FC = () => {
             />
           </form>
 
-          <Link to="/profile" className="user-btn" aria-label="User profile">
+          <Link to="/edit-info" className="user-btn" aria-label="User profile">
             <span className="user-icon" />
           </Link>
         </div>

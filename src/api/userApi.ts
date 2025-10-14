@@ -177,7 +177,7 @@ export const loginUser = async (userData: LoginUserData): Promise<LoginResponse>
   }
 };
 
-// ...existing code...
+
 /**
  * Request password reset: POST /users/forgot-password { email }
  */
@@ -223,4 +223,25 @@ export const resetPasswordWithToken = async (token: string, newPassword: string)
     throw error instanceof Error ? error : new Error('Network error');
   }
 };
-// ...existing code...
+
+export const deleteUser = async (userId: string, token?: string): Promise<{ message?: string }> => {
+  try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const response = await secureFetch(`${API_BASE_URL}/users/${userId}`, {
+      method: 'DELETE',
+      headers,
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || 'Error deleting user');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('deleteUser error:', { userId: userId ? '***' : '', error });
+    throw error instanceof Error ? error : new Error('Network error');
+  }
+};

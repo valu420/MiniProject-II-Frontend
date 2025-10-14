@@ -1,4 +1,4 @@
-// ...existing code...
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import './ChangePassword.scss';
@@ -98,4 +98,3 @@ const ChangePassword: React.FC = () => {
 };
 
 export default ChangePassword;
-// ...existing code...
