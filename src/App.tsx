@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { Nav } from './components/Nav';
-import { About } from './pages/About';
+import { About } from './pages/about/About';
 import ChangePassword from './pages/change-password/ChangePassword';
 import EditInfo from './pages/edit-info/EditInfo';
 import { HomePage } from './pages/home/HomePage';
