@@ -7,6 +7,7 @@
     /* neon green */
     --input-bg: rgba(255, 255, 255, 0.08);
     --input-border: rgba(255, 255, 255, 0.2);
+    --header-height: 72px;
 }
 
 /* Full page dark background */
@@ -29,7 +30,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 24px;
+    padding: 90px;
 }
 
 .register-card {
@@ -41,6 +42,7 @@ body {
     padding: 50px 48px;
     box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
     overflow: visible;
+    z-index: 20;
 }
 
 /* Neon outer glow using pseudo-element (subtle, green) */
