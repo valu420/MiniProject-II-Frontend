@@ -1,0 +1,251 @@
+/* Basic variables */
+:root {
+  --bg: #050505;
+  --card-bg: rgba(0, 0, 0, 0.85);
+  --muted: #9ca3af;
+  --accent: #00d084;
+  --panel: #0b0b0b;
+  --thumb: #ddd;
+  --gutter: 32px;
+  --content-width: 1100px;
+}
+
+.menu-page {
+  min-height: 100vh;
+  background: var(--bg);
+  color: #fff;
+  padding: 24px;
+  box-sizing: border-box;
+  /* Asegurar que ocupe toda la pantalla sin navbar */
+  margin: 0;
+  width: 100%;
+}
+
+/* Header */
+.menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: var(--content-width);
+  margin: 0 auto 28px;
+  width: 100%;
+  gap: 16px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #1a6b56, #0d5a42);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: #fff;
+  box-shadow: 0 4px 18px rgba(0, 208, 132, 0.12);
+}
+
+.brand-name {
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 0.2px;
+}
+
+/* Right side controls */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.search-form {
+  display: flex;
+  align-items: center;
+}
+
+.search-input {
+  width: 320px;
+  max-width: 40vw;
+  height: 36px;
+  border-radius: 18px;
+  border: none;
+  padding: 6px 14px;
+  background: #efefef;
+  color: #111;
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.user-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+}
+
+.user-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #cbbcff, #a28bff);
+  display: block;
+}
+
+/* Logout button */
+.logout-btn {
+  background: linear-gradient(135deg, #ff4757, #ff3838);
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(255, 71, 87, 0.3);
+}
+
+.logout-btn:hover {
+  background: linear-gradient(135deg, #ff3838, #ff2726);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 71, 87, 0.4);
+}
+
+.logout-btn:active {
+  transform: translateY(0);
+}
+
+/* Main content wrapper */
+.menu-content {
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: 8px 0 60px;
+}
+
+/* Category header with accent line */
+.category-section {
+  margin-bottom: 34px;
+}
+
+.category-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 8px 0 18px 0;
+  padding: 0 var(--gutter);
+}
+
+.category-header h2 {
+  color: var(--accent);
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.accent-line {
+  display: block;
+  height: 2px;
+  flex: 1;
+  background: linear-gradient(90deg, var(--accent), rgba(0, 208, 132, 0.2));
+  border-radius: 2px;
+}
+
+/* Cards grid */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 28px;
+  padding: 0 var(--gutter);
+  box-sizing: border-box;
+  align-items: start;
+}
+
+/* Individual card placeholder */
+.card {
+  background: var(--panel);
+  border-radius: 6px;
+  min-height: 220px;
+  /* tall rectangular cards */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.card-thumb {
+  width: 60%;
+  height: 70%;
+  max-width: 220px;
+  max-height: 240px;
+  background: var(--thumb);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #444;
+  font-size: 20px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  /* placeholder icon center */
+}
+
+/* Responsive: reduce columns and paddings */
+@media (max-width: 1000px) {
+  .cards-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  .search-input {
+    width: 260px;
+  }
+}
+
+@media (max-width: 720px) {
+  .menu-header {
+    padding: 0 8px;
+    gap: 10px;
+  }
+
+  .cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+
+  .search-input {
+    width: 160px;
+  }
+
+  .brand-name {
+    display: none;
+  }
+}
+
+@media (max-width: 420px) {
+  .cards-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .search-input {
+    display: none;
+  }
+
+  .brand-logo {
+    width: 48px;
+    height: 48px;
+  }
+
+  .menu-header {
+    margin-bottom: 18px;
+  }
+}
