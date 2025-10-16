@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { Nav } from './components/Nav';
+import Footer from './components/Footer';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { About } from './pages/about/About';
 import ChangePassword from './pages/change-password/ChangePassword';
@@ -10,6 +11,7 @@ import { Login } from './pages/login/Login';
 import { Menu } from './pages/menu/Menu';
 import { Register } from './pages/register/Register';
 import { ResetPassword } from './pages/reset-password/ResetPassword';
+import  SiteMap  from './pages/sitemap/SiteMap';
 
 /**
  * Root application component with routing
@@ -32,7 +34,9 @@ const AppContent: React.FC = () => {
   
   // Rutas donde no queremos mostrar el navbar
   const hideNavbarRoutes = ['/menu'];
+  const hideFooterRoutes = ['/menu', '/login', '/register', '/change-password', '/reset-password'];
   const shouldHideNavbar = hideNavbarRoutes.includes(location.pathname);
+  const shouldHideFooter = hideFooterRoutes.includes(location.pathname);
 
   return (
     <>
@@ -45,6 +49,7 @@ const AppContent: React.FC = () => {
           <Route path="/register" element={<Register />} />
           <Route path="/change-password" element={<ChangePassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/sitemap" element={<SiteMap />} />
           {/* Rutas protegidas que requieren autenticación */}
           <Route 
             path="/menu" 
@@ -64,6 +69,7 @@ const AppContent: React.FC = () => {
           />
         </Routes>
       </main>
+    {!shouldHideFooter && <Footer />}
     </>
   );
 };
