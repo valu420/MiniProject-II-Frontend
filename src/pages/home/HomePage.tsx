@@ -7,15 +7,19 @@ import { Link } from 'react-router-dom';
  */
 export const HomePage: React.FC = () => {
   return (
-    <div className="home-container">
+    <main className="home-container" role="main" aria-labelledby="page-title">
+      <h1 id="page-title" className="visually-hidden">Inicio - Lumière</h1>
 
       {/* HERO SECTION with VIDEO */}
-      <section className="hero">
-        <video autoPlay loop muted playsInline className="hero-video">
+      <section className="hero" aria-label="Sección de bienvenida">
+        <video autoPlay loop muted playsInline className="hero-video" aria-hidden="true" >
           <source src="wallpapervideo.mp4" type="video/mp4" />
           Tu navegador no soporta la reproducción de video.
         </video>
-        <div className="hero-overlay">
+        <div className="hero-overlay" aria-hidden="true"></div>
+      
+      <div className="hero-content">
+        <div className="hero-text">
           <h1 className="hero-title">
             Encuentra tus películas favoritas <br /> 
             y comparte tu opinión con los demás
@@ -24,11 +28,12 @@ export const HomePage: React.FC = () => {
             <button className="btn-primary">Empieza ya!</button>
           </Link>
         </div>
+      </div>
       </section>
 
       {/* SCROLLABLE MOVIE CAROUSEL */}
-      <section className="movie-carousel">
-        <h2>Explora lo más popular</h2>
+      <section className="movie-carousel" role="region" aria-labelledby="carousel-heading">
+        <h2 id="carousel-heading">Explora lo más popular</h2>
         <div className="movie-scroll">
           <img src="fightclub.jpg" alt="Fight Club" />
           <img src="blackswan.jpg" alt="Black Swan" />
@@ -42,7 +47,7 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* FEATURES SECTION */}
-      <section className="features">
+      <section className="features" role="region" aria-label="Características principales">
         <h2>¿Por qué elegir Lumière?</h2>
         <div className="feature-list">
           <div className="feature">
@@ -64,7 +69,7 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
       </section>
-    </div>
+    </main>
   );
 };
 

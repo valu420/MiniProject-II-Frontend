@@ -7,11 +7,12 @@ import "./About.css";
  */
 export const About: React.FC = () => {
   return (
-    <div className="about-container">
+    <main className="about-container" role="main" aria-labelledby="about-title">
+      <h1 id="about-title" className="visually-hidden">Sobre Nosotros - Lumière</h1>
  
       {/* Introducción */}
-      <section className="about-hero">
-        <h1>Sobre Nosotros</h1>
+      <section className="about-hero" aria-labelledby="hero-heading">
+        <h1 id="hero-heading">Sobre Nosotros</h1>
         <p>
           En <strong>Lumière</strong> creemos que el cine es más que entretenimiento: es una forma
           de conectar culturas, emociones e ideas. Nuestra plataforma nació con el propósito de
@@ -21,8 +22,8 @@ export const About: React.FC = () => {
       </section>
 
       {/* Objetivo */}
-      <section className="about-mission">
-        <h2>Nuestro objetivo</h2>
+      <section className="about-mission" role="region" aria-labelledby="mission-heading">
+        <h2 id="mission-heading">Nuestro objetivo</h2>
         <p>
           Buscamos fomentar la pasión por el cine mediante la exploración, el análisis y la
           conversación. Queremos que cada usuario pueda descubrir nuevas historias, compartir su
@@ -31,33 +32,33 @@ export const About: React.FC = () => {
       </section>
 
       {/* Equipo */}
-      <section className="about-team">
-        <h2>Nuestro equipo</h2>
-        <div className="team-cards">
-          <div className="team-card">
+      <section className="about-team" role="region" aria-labelledby="team-heading">
+        <h2 id="team-heading">Nuestro equipo</h2>
+        <div className="team-cards" role="list">
+          <article className="team-card" role="listitem">
             <h3>John Ramos</h3>
             <p>Desarrollador frontend</p>
-          </div>
-          <div className="team-card">
+          </article>
+          <article className="team-card" role="listitem">
             <h3>Gabriela Guzman</h3>
             <p>Desarrolladora backend</p>
-          </div>
-          <div className="team-card">
+          </article>
+          <article className="team-card" role="listitem">
             <h3>Juan Pablo Moreno</h3>
             <p>Desarrollador frontend</p>
-          </div>
-           <div className="team-card">
+          </article>
+          <article className="team-card" role="listitem">
             <h3>Kevin Ramirez</h3>
             <p>Desarrollador backend</p>
-          </div>
-           <div className="team-card">
+          </article>
+          <article className="team-card" role="listitem">
             <h3>Valentina Sanchez</h3>
             <p>Product Owner/ Tester</p>
-          </div>
+          </article>
         </div>
       </section>
 
-    </div>
+    </main>
   );
 };
 

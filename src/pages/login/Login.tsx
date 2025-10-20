@@ -80,49 +80,66 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="login-page">
+    <main className="login-page" role="main" aria-labelledby="login-title">
       <div className="login-card">
-        <h1 className="login-title">Iniciar Sesion</h1>
-        <form className="login-form" onSubmit={handleSubmit}>
+        <h1 id="login-title" className="login-title">Iniciar Sesión</h1>
+        
+        <form 
+          className="login-form" 
+          onSubmit={handleSubmit}
+          aria-labelledby="login-title"
+          noValidate
+        >
           <label htmlFor="email">
+            
             <input
               id="email"
               type="email"
               name="email"
-              placeholder="Correo electrónico"
+              placeholder="ejemplo@correo.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              aria-required="true"
+              aria-invalid={error ? 'true' : 'false'}
             />
           </label>
 
           <label htmlFor="password">
+            
             <input
               id="password"
               type="password"
               name="password"
-              placeholder="Contraseña"
+              placeholder="Tu contraseña"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              aria-required="true"
+              aria-invalid={error ? 'true' : 'false'}
             />
           </label>
 
           {error && (
-            <div className="login-error" aria-live="polite">
+            <div className="login-error" role="alert" aria-live="assertive">
               {error}
             </div>
           )}
 
           {successMessage && (
-            <div className="login-success" aria-live="polite">
+            <div className="login-success" role="status" aria-live="polite">
               {successMessage}
             </div>
           )}
 
           <div className="login-actions">
-            <button type="submit" className="btn-primary" disabled={loading}>
-              {loading ? 'Cargando...' : 'Iniciar Sesion'}
+            <button 
+              type="submit" 
+              className="btn-primary" 
+              disabled={loading}
+              aria-busy={loading}
+            >
+              {loading ? 'Cargando...' : 'Iniciar Sesión'}
             </button>
             <Link to="/change-password" className="login-link">
               ¿Olvidaste tu contraseña?
@@ -134,7 +151,7 @@ export const Login: React.FC = () => {
           ¿No tienes una cuenta? <Link to="/register">Regístrate</Link>
         </p>
       </div>
-    </div>
+    </main>
   );
 };
 

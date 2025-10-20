@@ -224,6 +224,7 @@ export const Register: React.FC = () => {
               type="text"
               name="name"
               placeholder="Nombres"
+              aria-label="Nombres"
               value={formData.name}
               onChange={handleChange}
               required
@@ -236,6 +237,7 @@ export const Register: React.FC = () => {
               type="text"
               name="surname"
               placeholder="Apellidos"
+              aria-label="Apellidos"
               value={formData.surname}
               onChange={handleChange}
               required
@@ -248,6 +250,7 @@ export const Register: React.FC = () => {
               type="number"
               name="age"
               placeholder="Edad"
+              aria-label="Edad"
               value={formData.age}
               onChange={handleChange}
               required
@@ -260,6 +263,7 @@ export const Register: React.FC = () => {
               type="email"
               name="email"
               placeholder="Correo Electrónico"
+              aria-label="Correo Electrónico"
               value={formData.email}
               onChange={handleChange}
               required
@@ -272,6 +276,7 @@ export const Register: React.FC = () => {
               type="password"
               name="password"
               placeholder="Contraseña"
+              aria-label="Contraseña"
               value={formData.password}
               onChange={handleChange}
               onFocus={handlePasswordFocus}
@@ -325,6 +330,7 @@ export const Register: React.FC = () => {
               type="password"
               name="confirmPassword"
               placeholder="Confirmar Contraseña"
+              aria-label="Confirmar Contraseña"
               value={formData.confirmPassword}
               onChange={handleChange}
               required
