@@ -73,7 +73,7 @@ export const ResetPassword: React.FC = () => {
           />
 
           <button type="submit" disabled={isLoading}>
-            {isLoading ? 'Guardando...' : 'Guardar nueva contraseña'}
+            {isLoading ? 'Guardando...' : 'Actualizar contraseña'}
           </button>
         </form>
       </div>

@@ -258,6 +258,42 @@ $icon-purple: #c4a7e7;
 
     // Campos de solo lectura ya están incluidos en el estilo principal de input
   }
+
+  // Botón para volver al menú
+.back-to-menu-btn {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: rgba(3, 3, 3, 0.1);
+  border: 1px solid rgba(0, 208, 132, 0.3);
+  color: $primary-green;
+  padding: 6px 19px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: auto;
+
+  &:hover {
+    background: rgba(0, 208, 132, 0.15);
+    border-color: rgba(0, 208, 132, 0.5);
+    transform: translateX(-2px);
+  }
+
+  &:active {
+    transform: translateX(-1px);
+  }
+}
+
+// Ajustar el contenedor para el botón absoluto
+.form-content {
+  position: relative;
+  padding-top: 8rem; // Espacio para el botón
+}
 }
 
 // Responsive design

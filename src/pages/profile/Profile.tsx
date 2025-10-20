@@ -197,9 +197,20 @@ export const Profile: React.FC = () => {
     }
   };
 
+  const handleBackToMenu = () => {
+    navigate('/menu');
+  };
+
   return (
     <div className="profile-container">
       <div className="form-content">
+        <button 
+          onClick={handleBackToMenu} 
+          className="back-to-menu-btn"
+          aria-label="Volver al menú"
+        >
+          ← Volver al Menú
+        </button>
         <div className="profile-icon" />
 
         <h1>Información de Perfil</h1>

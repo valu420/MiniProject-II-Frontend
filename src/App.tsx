@@ -33,7 +33,7 @@ const AppContent: React.FC = () => {
   const location = useLocation();
   
   // Rutas donde no queremos mostrar el navbar
-  const hideNavbarRoutes = ['/menu'];
+  const hideNavbarRoutes = ['/menu', '/profile'];
   const hideFooterRoutes = ['/menu', '/login', '/register', '/change-password', '/reset-password'];
   const shouldHideNavbar = hideNavbarRoutes.includes(location.pathname);
   const shouldHideFooter = hideFooterRoutes.includes(location.pathname);

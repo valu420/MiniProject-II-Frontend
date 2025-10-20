@@ -55,7 +55,7 @@ export const Menu: React.FC = () => {
           </form>
 
           <Link to="/profile" className="user-btn" aria-label="User profile">
-            <span className="user-icon" />
+            <span className="user-icon">👤</span>
           </Link>
 
           <button
@@ -64,7 +64,7 @@ export const Menu: React.FC = () => {
             aria-label="Cerrar sesión"
             title="Cerrar sesión"
           >
-            Salir
+            Cerrar Sesion
           </button>
         </div>
       </header>
@@ -101,4 +101,4 @@ export const Menu: React.FC = () => {
 };
 
 export default Menu;
-// ...existing code...
+
