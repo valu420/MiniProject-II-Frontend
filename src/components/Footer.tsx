@@ -1,33 +1,49 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import "./Footer.css";
 
 /**
  * Site footer with sitemap
  * @returns {JSX.Element}
  */
-const Footer: React.FC = () => {
+export const Footer: React.FC = () => {
   return (
-    <footer className="site-footer" role="contentinfo">
-      <div className="container">
-        <div className="sitemap" aria-label="Sitemap">
-          <div>
-            <h4>Pages</h4>
+    <footer className="footer">
+      <div className="footer-container">
+
+        {/* Enlaces */}
+        <div className="footer-links">
+          <div className="footer-column">
+            <h4>Explore</h4>
             <ul>
-              <li><Link to="/">Home</Link></li>
-              <li><Link to="/about">About</Link></li>
-              <li><Link to="/login">Login</Link></li>
+              <li>
+                <Link to="/sitemap">Mapa del sitio</Link>
+              </li>
             </ul>
           </div>
-          <div>
-            <h4>Account</h4>
+
+          <div className="footer-column">
+            <h4>Contact</h4>
             <ul>
-              <li><Link to="/register">Register</Link></li>
-              <li><Link to="/profile">Profile</Link></li>
+              <li>
+                <a href="mailto:contact@lumiere.com">contact@lumiere.com</a>
+              </li>
+              <li>
+                <a href="https://instagram.com" target="_blank" rel="noreferrer">
+                  Instagram
+                </a>
+              </li>
+              <li>
+                <a href="https://twitter.com" target="_blank" rel="noreferrer">
+                  Twitter
+                </a>
+              </li>
             </ul>
           </div>
         </div>
-        <p style={{ marginTop: 12, color: '#9ca3af' }}>© MiniProject II</p>
       </div>
+
+      
     </footer>
   );
 };
