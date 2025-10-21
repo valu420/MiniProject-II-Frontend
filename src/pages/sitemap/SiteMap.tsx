@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import './Sitemap.css';
+import './SiteMap.css';
 
 /**
  * Site Map page component
