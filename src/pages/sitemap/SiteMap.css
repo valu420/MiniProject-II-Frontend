@@ -2,7 +2,7 @@
   background: #0f0f0f;
   color: #e5e7eb;
   min-height: 100vh;
-  padding: 4rem 2rem;
+  padding: 10rem 2rem 4rem;
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -68,7 +68,7 @@
 
 @media (max-width: 768px) {
   .sitemap-container {
-    padding: 3rem 1rem;
+    padding: 8rem 1rem 3rem;
   }
 
   .sitemap-title {
