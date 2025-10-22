@@ -4,9 +4,21 @@ import { registerUser, RegisterUserData } from '../../api/userApi';
 import './Register.css';
 
 /**
+ * Password validation requirements
+ */
+interface PasswordRequirements {
+  minLength: boolean;
+  hasUpperCase: boolean;
+  hasLowerCase: boolean;
+  hasNumber: boolean;
+  hasSpecialChar: boolean;
+}
+
+/**
  * Register page component
  * - Allows users to create an account
  * - Includes fields for name, surname, age, email, password and confirm password
+ * - Shows real-time password validation feedback
  * - Accessible and styled according to the provided CSS
  * @returns {JSX.Element}
  */
@@ -19,7 +31,7 @@ export const Register: React.FC = () => {
     age: '',
     email: '',
     password: '',
-    confirmPassword: '', // added field
+    confirmPassword: '',
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -28,12 +40,56 @@ export const Register: React.FC = () => {
     text: string;
   } | null>(null);
 
+  const [passwordRequirements, setPasswordRequirements] =
+    useState<PasswordRequirements>({
+      minLength: false,
+      hasUpperCase: false,
+      hasLowerCase: false,
+      hasNumber: false,
+      hasSpecialChar: false,
+    });
+
+  const [showPasswordRequirements, setShowPasswordRequirements] =
+    useState(false);
+
+  /**
+   * Validate password requirements in real-time
+   */
+  const validatePassword = (password: string): PasswordRequirements => {
+    return {
+      minLength: password.length >= 8,
+      hasUpperCase: /[A-Z]/.test(password),
+      hasLowerCase: /[a-z]/.test(password),
+      hasNumber: /[0-9]/.test(password),
+      hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+    };
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
       [name]: value,
     }));
+
+    // Update password requirements when password changes
+    if (name === 'password') {
+      setPasswordRequirements(validatePassword(value));
+    }
+  };
+
+  const handlePasswordFocus = () => {
+    setShowPasswordRequirements(true);
+  };
+
+  const handlePasswordBlur = () => {
+    // Keep showing requirements if password is not empty
+
+    setShowPasswordRequirements(false);
+  };
+
+  const isPasswordValid = (): boolean => {
+    return Object.values(passwordRequirements).every((req) => req === true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -54,6 +110,16 @@ export const Register: React.FC = () => {
         setMessage({
           type: 'error',
           text: 'Por favor completa todos los campos',
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Validate password requirements
+      if (!isPasswordValid()) {
+        setMessage({
+          type: 'error',
+          text: 'La contraseña no cumple con los requisitos mínimos',
         });
         setIsLoading(false);
         return;
@@ -85,7 +151,7 @@ export const Register: React.FC = () => {
         firstName: formData.name,
         lastName: formData.surname,
         email: formData.email,
-        password: formData.password, // El backend se encarga del hash
+        password: formData.password,
         age: age,
       };
 
@@ -129,7 +195,7 @@ export const Register: React.FC = () => {
       setMessage({ type: 'error', text: errorMessage });
       console.error('Error al registrar usuario:', {
         error: errorMessage,
-        email: formData.email, // Solo log del email, no la contraseña
+        email: formData.email,
       });
     } finally {
       setIsLoading(false);
@@ -137,7 +203,12 @@ export const Register: React.FC = () => {
   };
 
   return (
-    <div className="register-page">
+    <div
+      className="register-page"
+      role="main"
+      aria-live="polite"
+      aria-label="Página de registro de cuenta"
+    >
       <div className="register-card">
         <h1 className="register-title">Crear cuenta</h1>
 
@@ -159,6 +230,7 @@ export const Register: React.FC = () => {
               type="text"
               name="name"
               placeholder="Nombres"
+              aria-label="Nombres"
               value={formData.name}
               onChange={handleChange}
               required
@@ -171,6 +243,7 @@ export const Register: React.FC = () => {
               type="text"
               name="surname"
               placeholder="Apellidos"
+              aria-label="Apellidos"
               value={formData.surname}
               onChange={handleChange}
               required
@@ -183,6 +256,7 @@ export const Register: React.FC = () => {
               type="number"
               name="age"
               placeholder="Edad"
+              aria-label="Edad"
               value={formData.age}
               onChange={handleChange}
               required
@@ -195,31 +269,96 @@ export const Register: React.FC = () => {
               type="email"
               name="email"
               placeholder="Correo Electrónico"
+              aria-label="Correo Electrónico"
               value={formData.email}
               onChange={handleChange}
               required
             />
           </label>
 
-          <label htmlFor="password">
+          <label htmlFor="password" className="password-label">
             <input
               id="password"
               type="password"
               name="password"
               placeholder="Contraseña"
+              aria-label="Contraseña"
               value={formData.password}
               onChange={handleChange}
+              onFocus={handlePasswordFocus}
+              onBlur={handlePasswordBlur}
               required
             />
+
+            {/* Password requirements indicator */}
+            {showPasswordRequirements && (
+              <div className="password-requirements" aria-live="polite">
+                <p className="requirements-title">
+                  La contraseña debe contener:
+                </p>
+                <ul className="requirements-list">
+                  <li
+                    className={
+                      passwordRequirements.minLength ? 'valid' : 'invalid'
+                    }
+                  >
+                    <span className="requirement-icon">
+                      {passwordRequirements.minLength ? '✓' : '✗'}
+                    </span>
+                    Mínimo 8 caracteres
+                  </li>
+                  <li
+                    className={
+                      passwordRequirements.hasUpperCase ? 'valid' : 'invalid'
+                    }
+                  >
+                    <span className="requirement-icon">
+                      {passwordRequirements.hasUpperCase ? '✓' : '✗'}
+                    </span>
+                    Al menos una letra mayúscula
+                  </li>
+                  <li
+                    className={
+                      passwordRequirements.hasLowerCase ? 'valid' : 'invalid'
+                    }
+                  >
+                    <span className="requirement-icon">
+                      {passwordRequirements.hasLowerCase ? '✓' : '✗'}
+                    </span>
+                    Al menos una letra minúscula
+                  </li>
+                  <li
+                    className={
+                      passwordRequirements.hasNumber ? 'valid' : 'invalid'
+                    }
+                  >
+                    <span className="requirement-icon">
+                      {passwordRequirements.hasNumber ? '✓' : '✗'}
+                    </span>
+                    Al menos un número
+                  </li>
+                  <li
+                    className={
+                      passwordRequirements.hasSpecialChar ? 'valid' : 'invalid'
+                    }
+                  >
+                    <span className="requirement-icon">
+                      {passwordRequirements.hasSpecialChar ? '✓' : '✗'}
+                    </span>
+                    Al menos un carácter especial (!@#$%^&*...)
+                  </li>
+                </ul>
+              </div>
+            )}
           </label>
 
-          {/* Confirm password field */}
           <label htmlFor="confirmPassword">
             <input
               id="confirmPassword"
               type="password"
               name="confirmPassword"
               placeholder="Confirmar Contraseña"
+              aria-label="Confirmar Contraseña"
               value={formData.confirmPassword}
               onChange={handleChange}
               required

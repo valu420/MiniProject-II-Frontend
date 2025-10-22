@@ -8,6 +8,17 @@ import {
 } from '../../api/userApi';
 import './Profile.scss';
 
+/**
+ * Password validation requirements
+ */
+interface PasswordRequirements {
+  minLength: boolean;
+  hasUpperCase: boolean;
+  hasLowerCase: boolean;
+  hasNumber: boolean;
+  hasSpecialChar: boolean;
+}
+
 export const Profile: React.FC = () => {
   const navigate = useNavigate();
   const [isDeleting, setIsDeleting] = useState(false);
@@ -29,6 +40,20 @@ export const Profile: React.FC = () => {
     age: 0,
     email: '',
   });
+
+  const [newPassword, setNewPassword] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordRequirements, setPasswordRequirements] =
+    useState<PasswordRequirements>({
+      minLength: false,
+      hasUpperCase: false,
+      hasLowerCase: false,
+      hasNumber: false,
+      hasSpecialChar: false,
+    });
+  const [showPasswordRequirements, setShowPasswordRequirements] =
+    useState(false);
 
   // Función para cargar el perfil del usuario
   const loadUserProfile = async () => {
@@ -78,6 +103,19 @@ export const Profile: React.FC = () => {
     loadUserProfile();
   }, []);
 
+  /**
+   * Validate password requirements in real-time
+   */
+  const validatePassword = (password: string): PasswordRequirements => {
+    return {
+      minLength: password.length >= 8,
+      hasUpperCase: /[A-Z]/.test(password),
+      hasLowerCase: /[a-z]/.test(password),
+      hasNumber: /[0-9]/.test(password),
+      hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+    };
+  };
+
   // Función para manejar cambios en los campos editables
   const handleInputChange = (
     field: keyof typeof editableProfile,
@@ -101,26 +139,75 @@ export const Profile: React.FC = () => {
       return;
     }
 
+    // Validar si se está intentando cambiar la contraseña
+    if (newPassword) {
+      // Validar que la nueva contraseña cumpla con los requisitos
+      const requirements = validatePassword(newPassword);
+      const allRequirementsMet = Object.values(requirements).every(Boolean);
+
+      if (!allRequirementsMet) {
+        setStatusMessage({
+          type: 'error',
+          text: 'La nueva contraseña no cumple con los requisitos.',
+        });
+        return;
+      }
+
+      // Validar que las contraseñas coincidan
+      if (newPassword !== confirmPassword) {
+        setStatusMessage({
+          type: 'error',
+          text: 'Las contraseñas no coinciden.',
+        });
+        return;
+      }
+
+      // Validar que se haya ingresado la contraseña actual
+      if (!currentPassword) {
+        setStatusMessage({
+          type: 'error',
+          text: 'Debes ingresar tu contraseña actual para cambiarla.',
+        });
+        return;
+      }
+    }
+
     const token = localStorage.getItem('token');
     setStatusMessage(null);
 
     try {
+      const updateData: any = {
+        firstName: editableProfile.firstName,
+        lastName: editableProfile.lastName,
+        age: editableProfile.age,
+        email: editableProfile.email,
+      };
+
+      // Si hay contraseña nueva, incluir ambas contraseñas
+      if (newPassword && currentPassword) {
+        updateData.currentPassword = currentPassword;
+        updateData.password = newPassword;
+      }
+
       const updatedProfile = await updateUserProfile(
         userProfile._id,
-        {
-          firstName: editableProfile.firstName,
-          lastName: editableProfile.lastName,
-          age: editableProfile.age,
-          email: editableProfile.email,
-        },
+        updateData,
         token || undefined
       );
 
       setUserProfile(updatedProfile);
       setIsEditing(false);
+
+      // Limpiar los campos de contraseña
+      setNewPassword('');
+      setCurrentPassword('');
+      setConfirmPassword('');
+
       setStatusMessage({
         type: 'success',
-        text: 'Perfil actualizado correctamente.',
+        text: newPassword
+          ? 'Perfil y contraseña actualizados correctamente.'
+          : 'Perfil actualizado correctamente.',
       });
 
       // Actualizar la información en localStorage si es necesario
@@ -153,6 +240,10 @@ export const Profile: React.FC = () => {
         email: userProfile.email,
       });
     }
+    // Limpiar campos de contraseña
+    setNewPassword('');
+    setCurrentPassword('');
+    setConfirmPassword('');
     setIsEditing(false);
   };
 
@@ -197,9 +288,25 @@ export const Profile: React.FC = () => {
     }
   };
 
+  const handleBackToMenu = () => {
+    navigate('/menu');
+  };
+
   return (
-    <div className="profile-container">
+    <div
+      className="profile-container"
+      role="main"
+      aria-live="polite"
+      aria-label="Página de perfil de usuario"
+    >
       <div className="form-content">
+        <button
+          onClick={handleBackToMenu}
+          className="back-to-menu-btn"
+          aria-label="Volver al menú"
+        >
+          ← Volver al Menú
+        </button>
         <div className="profile-icon" />
 
         <h1>Información de Perfil</h1>
@@ -260,34 +367,134 @@ export const Profile: React.FC = () => {
               />
             </div>
 
-            <div className="form-group">
-              <label>Fecha de registro:</label>
-              <input
-                type="text"
-                value={new Date(userProfile.createdAt).toLocaleDateString(
-                  'es-ES'
-                )}
-                readOnly
-                placeholder="Fecha de registro"
-              />
-            </div>
+            {isEditing && (
+              <>
+                <div className="form-group">
+                  <label>Contraseña actual:</label>
+                  <input
+                    type="password"
+                    placeholder="Contraseña actual"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Nueva Contraseña:</label>
+                  <input
+                    type="password"
+                    placeholder="Nueva Contraseña (opcional)"
+                    value={newPassword}
+                    onChange={(e) => {
+                      setNewPassword(e.target.value);
+                      setPasswordRequirements(validatePassword(e.target.value));
+                    }}
+                    onFocus={() => setShowPasswordRequirements(true)}
+                    onBlur={() => setShowPasswordRequirements(false)}
+                  />
+
+                  {/* Password requirements indicator */}
+                  {showPasswordRequirements && (
+                    <div className="password-requirements" aria-live="polite">
+                      <p className="requirements-title">
+                        La contraseña debe contener:
+                      </p>
+                      <ul className="requirements-list">
+                        <li
+                          className={
+                            passwordRequirements.minLength ? 'valid' : 'invalid'
+                          }
+                        >
+                          <span className="requirement-icon">
+                            {passwordRequirements.minLength ? '✓' : '✗'}
+                          </span>
+                          Mínimo 8 caracteres
+                        </li>
+                        <li
+                          className={
+                            passwordRequirements.hasUpperCase
+                              ? 'valid'
+                              : 'invalid'
+                          }
+                        >
+                          <span className="requirement-icon">
+                            {passwordRequirements.hasUpperCase ? '✓' : '✗'}
+                          </span>
+                          Al menos una letra mayúscula
+                        </li>
+                        <li
+                          className={
+                            passwordRequirements.hasLowerCase
+                              ? 'valid'
+                              : 'invalid'
+                          }
+                        >
+                          <span className="requirement-icon">
+                            {passwordRequirements.hasLowerCase ? '✓' : '✗'}
+                          </span>
+                          Al menos una letra minúscula
+                        </li>
+                        <li
+                          className={
+                            passwordRequirements.hasNumber ? 'valid' : 'invalid'
+                          }
+                        >
+                          <span className="requirement-icon">
+                            {passwordRequirements.hasNumber ? '✓' : '✗'}
+                          </span>
+                          Al menos un número
+                        </li>
+                        <li
+                          className={
+                            passwordRequirements.hasSpecialChar
+                              ? 'valid'
+                              : 'invalid'
+                          }
+                        >
+                          <span className="requirement-icon">
+                            {passwordRequirements.hasSpecialChar ? '✓' : '✗'}
+                          </span>
+                          Al menos un carácter especial (!@#$%^&*...)
+                        </li>
+                      </ul>
+                    </div>
+                  )}
+                </div>
+                <div className="form-group">
+                  <label>Confirmar Nueva Contraseña:</label>
+                  <input
+                    type="password"
+                    placeholder="Confirmar Nueva Contraseña"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                  />
+                  {confirmPassword && newPassword !== confirmPassword && (
+                    <span
+                      className="error-text"
+                      style={{ color: 'red', fontSize: '0.875rem' }}
+                    >
+                      Las contraseñas no coinciden
+                    </span>
+                  )}
+                </div>
+              </>
+            )}
 
             <div className="button-group">
+              {isEditing && (
+                <button type="submit" className="save-btn">
+                  Guardar Cambios
+                </button>
+              )}
               <button
                 type="button"
-                className="edit-btn"
+                className={`edit-btn ${isEditing ? 'cancel-mode' : ''}`}
                 onClick={
                   isEditing ? handleCancelEdit : () => setIsEditing(true)
                 }
               >
                 {isEditing ? 'Cancelar' : 'Editar Perfil'}
               </button>
-
-              {isEditing && (
-                <button type="submit" className="save-btn">
-                  Guardar Cambios
-                </button>
-              )}
             </div>
           </form>
         ) : (
@@ -305,14 +512,16 @@ export const Profile: React.FC = () => {
           </div>
         )}
 
-        <button
-          onClick={handleDeleteAccount}
-          className="delete-account"
-          disabled={isDeleting}
-          aria-disabled={isDeleting}
-        >
-          {isDeleting ? 'Eliminando cuenta...' : 'Eliminar Cuenta'}
-        </button>
+        {!isEditing && (
+          <button
+            onClick={handleDeleteAccount}
+            className="delete-account"
+            disabled={isDeleting}
+            aria-disabled={isDeleting}
+          >
+            {isDeleting ? 'Eliminando cuenta...' : 'Eliminar Cuenta'}
+          </button>
+        )}
       </div>
     </div>
   );

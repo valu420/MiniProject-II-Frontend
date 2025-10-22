@@ -68,16 +68,19 @@ $icon-purple: #c4a7e7;
       display: flex;
       align-items: center;
       gap: 1rem;
+      flex-wrap: wrap;
+      position: relative;
 
       label {
         font-weight: 500;
         font-size: 1rem;
-        min-width: 80px;
+        min-width: 200px;
         text-align: left;
       }
 
       input {
         flex: 1;
+        min-width: 200px;
         padding: 0.75rem;
         border: 2px solid transparent;
         border-radius: 8px;
@@ -189,11 +192,21 @@ $icon-purple: #c4a7e7;
         background-color: color.adjust($primary-green, $lightness: -10%);
         transform: translateY(-1px);
       }
+
+      // Estilo para cuando está en modo cancelar
+      &.cancel-mode {
+        background-color: #ff4444;
+
+        &:hover {
+          background-color: #e63939;
+          transform: translateY(-1px);
+        }
+      }
     }
 
     // Botón de guardar
     .save-btn {
-      background-color: #4caf50;
+      background-color: $primary-green;
       color: white;
       border: none;
       padding: 0.75rem 1.5rem;
@@ -205,7 +218,7 @@ $icon-purple: #c4a7e7;
       min-width: 120px;
 
       &:hover {
-        background-color: #45a049;
+        background-color: color.adjust($primary-green, $lightness: -10%);
         transform: translateY(-1px);
       }
     }
@@ -246,18 +259,44 @@ $icon-purple: #c4a7e7;
       }
     }
 
-    // Botón de guardar cuando está editando
-    .save-btn {
-      background-color: #4caf50 !important;
-      margin-top: 0.5rem !important;
-
-      &:hover {
-        background-color: #45a049 !important;
-      }
-    }
-
     // Campos de solo lectura ya están incluidos en el estilo principal de input
   }
+
+  // Botón para volver al menú
+.back-to-menu-btn {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: rgba(3, 3, 3, 0.1);
+  border: 1px solid rgba(0, 208, 132, 0.3);
+  color: $primary-green;
+  padding: 6px 19px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: auto;
+
+  &:hover {
+    background: rgba(0, 208, 132, 0.15);
+    border-color: rgba(0, 208, 132, 0.5);
+    transform: translateX(-2px);
+  }
+
+  &:active {
+    transform: translateX(-1px);
+  }
+}
+
+// Ajustar el contenedor para el botón absoluto
+.form-content {
+  position: relative;
+  padding-top: 8rem; // Espacio para el botón
+}
 }
 
 // Responsive design
@@ -288,6 +327,7 @@ $icon-purple: #c4a7e7;
           flex-direction: column;
           align-items: flex-start;
           gap: 0.5rem;
+          position: relative;
 
           label {
             min-width: auto;
@@ -305,5 +345,68 @@ $icon-purple: #c4a7e7;
         }
       }
     }
+  }
+
+  // Estilos para requisitos de contraseña
+  .password-requirements {
+    width: calc(100% - 212px); // Mismo ancho que el input (200px label + 12px gap)
+    margin-left: 212px; // 200px (min-width del label) + 12px (gap de 1rem)
+    margin-top: 8px;
+    margin-bottom: -8px; // Compensar el espacio extra
+    padding: 12px 16px;
+    background: rgba(0, 0, 0, 0.95);
+    border: 1px solid rgba($primary-green, 0.2);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  }
+
+  .requirements-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .requirements-title {
+    margin: 0 0 8px 0;
+    font-size: 13px;
+    color: rgba($text-white, 0.7);
+    font-weight: 600;
+  }
+
+  .requirements-list li {
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: color 0.2s ease;
+
+    &.valid {
+      color: $primary-green;
+    }
+
+    &.invalid {
+      color: rgba($text-white, 0.5);
+    }
+  }
+
+  .requirement-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    font-size: 11px;
+    font-weight: bold;
+  }
+
+  .requirements-list li.valid .requirement-icon {
+    color: $primary-green;
+  }
+
+  .requirements-list li.invalid .requirement-icon {
+    color: #ef4444;
   }
 }
