@@ -12,7 +12,7 @@ import { Menu } from './pages/menu/Menu';
 import { Register } from './pages/register/Register';
 import { ResetPassword } from './pages/reset-password/ResetPassword';
 import  SiteMap  from './pages/sitemap/SiteMap';
-import Movie from './pages/movie/movie';
+import Movie from './pages/movie/Movie';
 
 /**
  * Root application component with routing
@@ -34,9 +34,9 @@ const AppContent: React.FC = () => {
   const location = useLocation();
   
   // Rutas donde no queremos mostrar el navbar
-  const hideNavbarRoutes = ['/menu', '/profile', '/movie'];
+  const hideNavbarRoutes = ['/menu', '/profile'];
   const hideFooterRoutes = ['/menu', '/login', '/register', '/change-password', '/reset-password'];
-  const shouldHideNavbar = hideNavbarRoutes.includes(location.pathname);
+  const shouldHideNavbar = hideNavbarRoutes.includes(location.pathname) || location.pathname.startsWith('/movie');
   const shouldHideFooter = hideFooterRoutes.includes(location.pathname);
 
   return (
@@ -51,7 +51,7 @@ const AppContent: React.FC = () => {
           <Route path="/change-password" element={<ChangePassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/sitemap" element={<SiteMap />} />
-          <Route path="/movie" element={<Movie />} />
+          <Route path="/movie/:id" element={<Movie />} />
           {/* Rutas protegidas que requieren autenticación */}
           <Route 
             path="/menu" 

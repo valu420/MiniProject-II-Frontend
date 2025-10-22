@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { getFilmById, getStreamingInfo, type Film, type StreamingInfo } from '../../api/filmApi';
 import './Movie.css';
 
 interface Movie {
@@ -30,51 +31,49 @@ interface Comment {
 export const Movie: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  
-  const [movie, setMovie] = useState<Movie | null>(null);
+
+  // Cargamos la película real desde el backend
+  const [movie, setMovie] = useState<Film | null>(null);
+  const [streamingInfo, setStreamingInfo] = useState<StreamingInfo | null>(null);
+
+  // UI local (rating/comentarios sin backend aún)
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [userRating, setUserRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
-    loadMovieData();
+    if (!id) {
+      setError('ID de película inválido');
+      setIsLoading(false);
+      return;
+    }
+    loadMovieData(id);
     checkIfFavorite();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  const loadMovieData = async () => {
+  const loadMovieData = async (filmId: string) => {
     try {
       setIsLoading(true);
-      // TODO: Reemplazar con tu endpoint real
-      // const response = await fetch(`/api/movies/${id}`);
-      // const data = await response.json();
-      // setMovie(data);
-      
-      // Datos de ejemplo (eliminar cuando integres el backend)
-      setMovie({
-        _id: id || '1',
-        title: 'Película de Ejemplo',
-        description: 'Esta es una descripción detallada de la película...',
-        genre: ['Acción', 'Aventura'],
-        releaseYear: 2024,
-        duration: 120,
-        director: 'Director Ejemplo',
-        cast: ['Actor 1', 'Actor 2', 'Actor 3'],
-        posterUrl: '/placeholder-poster.jpg',
-        videoUrl: 'https://www.youtube.com/embed/example',
-        rating: 4.5,
-        ratingsCount: 150,
-      });
+      setError(null);
 
-      // Cargar comentarios
-      // const commentsResponse = await fetch(`/api/movies/${id}/comments`);
-      // const commentsData = await commentsResponse.json();
-      // setComments(commentsData);
-      
+      // 1) Película
+      const filmData = await getFilmById(filmId);
+      setMovie(filmData);
+
+      // 2) URL de streaming (si tu backend la expone)
+      try {
+        const streamData = await getStreamingInfo(filmId);
+        setStreamingInfo(streamData);
+      } catch {
+        setStreamingInfo(null); // si no hay endpoint/da error, seguimos mostrando movie.url
+      }
     } catch (err: any) {
       setError(err?.message || 'Error al cargar la película');
     } finally {
@@ -83,105 +82,39 @@ export const Movie: React.FC = () => {
   };
 
   const checkIfFavorite = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-      
-      // TODO: Endpoint para verificar si está en favoritos
-      // const response = await fetch(`/api/users/favorites/${id}`, {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
-      // const data = await response.json();
-      // setIsFavorite(data.isFavorite);
-    } catch (err) {
-      console.error('Error checking favorite status:', err);
-    }
+    // Placeholder: cuando tengas endpoint de favoritos, actualiza aquí
+    setIsFavorite(false);
   };
 
-  const handleRating = async (rating: number) => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setStatusMessage({ type: 'error', text: 'Debes iniciar sesión para calificar' });
-        return;
-      }
-
-      setUserRating(rating);
-      
-      // TODO: Endpoint para guardar calificación
-      // await fetch(`/api/movies/${id}/rate`, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     Authorization: `Bearer ${token}`
-      //   },
-      //   body: JSON.stringify({ rating })
-      // });
-
-      setStatusMessage({ type: 'success', text: 'Calificación guardada' });
-      setTimeout(() => setStatusMessage(null), 3000);
-    } catch (err: any) {
-      setStatusMessage({ type: 'error', text: err?.message || 'Error al guardar calificación' });
-    }
+  // Solo UI local (sin persistencia)
+  const handleRating = (rating: number) => {
+    setUserRating(rating);
+    setStatusMessage({ type: 'success', text: 'Calificación registrada localmente' });
+    setTimeout(() => setStatusMessage(null), 2000);
   };
 
-  const handleToggleFavorite = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setStatusMessage({ type: 'error', text: 'Debes iniciar sesión para agregar favoritos' });
-        return;
-      }
-
-      setIsFavorite(!isFavorite);
-
-      // TODO: Endpoint para toggle favoritos
-      // await fetch(`/api/users/favorites/${id}`, {
-      //   method: isFavorite ? 'DELETE' : 'POST',
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
-
-      setStatusMessage({
-        type: 'success',
-        text: isFavorite ? 'Eliminado de favoritos' : 'Agregado a favoritos'
-      });
-      setTimeout(() => setStatusMessage(null), 3000);
-    } catch (err: any) {
-      setStatusMessage({ type: 'error', text: err?.message || 'Error al actualizar favoritos' });
-      setIsFavorite(!isFavorite); // Revertir en caso de error
-    }
+  const handleToggleFavorite = () => {
+    setIsFavorite((prev) => !prev);
+    setStatusMessage({
+      type: 'success',
+      text: !isFavorite ? 'Agregado a favoritos (local)' : 'Eliminado de favoritos (local)',
+    });
+    setTimeout(() => setStatusMessage(null), 2000);
   };
 
-  const handleSubmitComment = async (e: React.FormEvent) => {
+  const handleSubmitComment = (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!newComment.trim()) return;
-
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setStatusMessage({ type: 'error', text: 'Debes iniciar sesión para comentar' });
-        return;
-      }
-
-      // TODO: Endpoint para crear comentario
-      // const response = await fetch(`/api/movies/${id}/comments`, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     Authorization: `Bearer ${token}`
-      //   },
-      //   body: JSON.stringify({ text: newComment })
-      // });
-      // const newCommentData = await response.json();
-      // setComments([newCommentData, ...comments]);
-
-      setNewComment('');
-      setStatusMessage({ type: 'success', text: 'Comentario publicado' });
-      setTimeout(() => setStatusMessage(null), 3000);
-    } catch (err: any) {
-      setStatusMessage({ type: 'error', text: err?.message || 'Error al publicar comentario' });
-    }
+    const temp: Comment = {
+      _id: crypto.randomUUID(),
+      userId: { firstName: 'Tú', lastName: '' },
+      text: newComment.trim(),
+      createdAt: new Date().toISOString(),
+    };
+    setComments((prev) => [temp, ...prev]);
+    setNewComment('');
+    setStatusMessage({ type: 'success', text: 'Comentario agregado (local)' });
+    setTimeout(() => setStatusMessage(null), 2000);
   };
 
   if (isLoading) {
@@ -205,6 +138,14 @@ export const Movie: React.FC = () => {
     );
   }
 
+  const year =
+    movie.releaseDate ? new Date(movie.releaseDate).getFullYear() : undefined;
+  const genreText = Array.isArray((movie as any).genre)
+    ? (movie as any).genre.join(', ')
+    : (movie as any).genre;
+
+  const videoSrc = streamingInfo?.streamUrl || movie.url;
+
   return (
     <main className="movie-page" role="main" aria-labelledby="movie-title">
       <button onClick={() => navigate('/menu')} className="back-btn" aria-label="Volver al menú">
@@ -218,16 +159,14 @@ export const Movie: React.FC = () => {
       )}
 
       <div className="movie-container">
-        {/* Sección del poster y video */}
+        {/* Poster + Video */}
         <section className="movie-media" aria-label="Contenido multimedia">
-          <div className="movie-poster">
-            <img src={movie.posterUrl} alt={`Poster de ${movie.title}`} />
-          </div>
+          
 
           <div className="movie-video">
             <iframe
-              src={movie.videoUrl}
-              title={`Trailer de ${movie.title}`}
+              src={videoSrc}
+              title={`Video de ${movie.name}`}
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
@@ -235,66 +174,88 @@ export const Movie: React.FC = () => {
           </div>
         </section>
 
-        {/* Información de la película */}
+        {/* Información */}
         <section className="movie-info" aria-labelledby="movie-title">
-          <div className="movie-header">
-            <h1 id="movie-title">{movie.title}</h1>
-            <button
-              onClick={handleToggleFavorite}
-              className={`favorite-btn ${isFavorite ? 'active' : ''}`}
-              aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-              aria-pressed={isFavorite}
-            >
-              {isFavorite ? '❤️' : '🤍'}
-            </button>
-          </div>
-
-          <div className="movie-meta">
-            <span className="movie-year">{movie.releaseYear}</span>
-            <span className="movie-duration">{movie.duration} min</span>
-            <span className="movie-genre">{movie.genre.join(', ')}</span>
-          </div>
-
-          <p className="movie-description">{movie.description}</p>
-
-          <div className="movie-details">
-            <div className="detail-item">
-              <strong>Director:</strong> {movie.director}
-            </div>
-            <div className="detail-item">
-              <strong>Reparto:</strong> {movie.cast.join(', ')}
-            </div>
-          </div>
-
-          {/* Calificación */}
-          <div className="movie-rating-section" role="group" aria-labelledby="rating-label">
-            <h2 id="rating-label">Calificación</h2>
-            <div className="rating-display">
-              <span className="rating-value">{movie.rating?.toFixed(1) || 'N/A'}</span>
-              <span className="rating-count">({movie.ratingsCount || 0} votos)</span>
+          <div className="movie-info-content">{/* AÑADIDO: contenedor grid poster + texto */}
+            <div className="movie-poster">
+              {movie.posterUrl ? (
+                <img src={movie.posterUrl} alt={`Poster de ${movie.name}`} />
+              ) : (
+                <div className="poster-fallback" aria-label="Sin poster">
+                  {movie.name}
+                </div>
+              )}
             </div>
 
-            <div className="rating-input" role="radiogroup" aria-label="Califica esta película">
-              {[1, 2, 3, 4, 5].map((star) => (
+            <div className="movie-text">{/* AÑADIDO: envuelve todo el texto */}
+              <div className="movie-header">
+                <h1 id="movie-title">{movie.name}</h1>
                 <button
-                  key={star}
-                  type="button"
-                  className={`star ${star <= (hoverRating || userRating) ? 'active' : ''}`}
-                  onClick={() => handleRating(star)}
-                  onMouseEnter={() => setHoverRating(star)}
-                  onMouseLeave={() => setHoverRating(0)}
-                  aria-label={`Calificar con ${star} estrella${star > 1 ? 's' : ''}`}
-                  role="radio"
-                  aria-checked={star === userRating}
+                  onClick={handleToggleFavorite}
+                  className={`favorite-btn ${isFavorite ? 'active' : ''}`}
+                  aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                  aria-pressed={isFavorite}
                 >
-                  ★
+                  {isFavorite ? '❤️' : '🤍'}
                 </button>
-              ))}
+              </div>
+
+              <div className="movie-meta">
+                {year && <span className="movie-year">{year}</span>}
+                {movie.duration && <span className="movie-duration">{movie.duration} min</span>}
+                {genreText && <span className="movie-genre">{genreText}</span>}
+              </div>
+
+              {movie.description && <p className="movie-description">{movie.description}</p>}
+
+              {(movie.director || (movie.cast && movie.cast.length > 0)) && (
+                <div className="movie-details">
+                  {movie.director && (
+                    <div className="detail-item">
+                      <strong>Director:</strong> {movie.director}
+                    </div>
+                  )}
+                  {movie.cast && movie.cast.length > 0 && (
+                    <div className="detail-item">
+                      <strong>Reparto:</strong> {movie.cast.join(', ')}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Calificación (solo UI local) */}
+              <div className="movie-rating-section" role="group" aria-labelledby="rating-label">
+                <h2 id="rating-label">Calificación</h2>
+                <div className="rating-display">
+                  <span className="rating-value">
+                    {typeof movie.rating === 'number' ? movie.rating.toFixed(1) : 'N/A'}
+                  </span>
+                  <span className="rating-count">({movie.ratingsCount || 0} votos)</span>
+                </div>
+
+                <div className="rating-input" role="radiogroup" aria-label="Califica esta película">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      className={`star ${star <= (hoverRating || userRating) ? 'active' : ''}`}
+                      onClick={() => handleRating(star)}
+                      onMouseEnter={() => setHoverRating(star)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      aria-label={`Calificar con ${star} estrella${star > 1 ? 's' : ''}`}
+                      role="radio"
+                      aria-checked={star === userRating}
+                    >
+                      ★
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Sección de comentarios */}
+        {/* Comentarios (solo UI local) */}
         <section className="movie-comments" aria-labelledby="comments-heading">
           <h2 id="comments-heading">Comentarios</h2>
 
@@ -308,7 +269,7 @@ export const Movie: React.FC = () => {
               maxLength={500}
             />
             <button type="submit" className="submit-comment-btn" disabled={!newComment.trim()}>
-              Publicar comentario
+              Comentar
             </button>
           </form>
 

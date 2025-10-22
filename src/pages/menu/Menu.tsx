@@ -1,17 +1,19 @@
-// ...existing code...
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { getAllFilms, getFilmsByGenre, Film } from '../../api/filmApi';
 import './Menu.css';
 
 /**
  * Menu page with header and category grids.
- * Cards are empty containers (placeholders) to be filled later with images.
+ * Loads films from backend and displays them with posters.
  * @returns {JSX.Element}
  */
 export const Menu: React.FC = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
-  const categories = ['Categoria', 'Categoria'];
+  const [films, setFilms] = useState<Film[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Obtener información del usuario desde localStorage
@@ -19,7 +21,24 @@ export const Menu: React.FC = () => {
     if (userData) {
       setUser(JSON.parse(userData));
     }
+    
+    // Cargar películas
+    loadFilms();
   }, []);
+
+  const loadFilms = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const filmsData = await getAllFilms();
+      setFilms(filmsData);
+    } catch (err: any) {
+      setError(err?.message || 'Error al cargar películas');
+      console.error('Error loading films:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleLogout = () => {
     // Limpiar localStorage
@@ -28,6 +47,17 @@ export const Menu: React.FC = () => {
 
     // Redirigir al login
     navigate('/login');
+  };
+
+  const handleCardClick = (filmId: string) => {
+    navigate(`/movie/${filmId}`);
+  };
+
+  const handleCardKeyDown = (e: React.KeyboardEvent, filmId: string) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      navigate(`/movie/${filmId}`);
+    }
   };
 
   return (
@@ -45,12 +75,13 @@ export const Menu: React.FC = () => {
             className="search-form"
             role="search"
             aria-label="Search movies"
+            onSubmit={(e) => e.preventDefault()}
           >
             <input
               type="search"
               className="search-input"
               placeholder="Buscar"
-              aria-label="Buscar"
+              aria-label="Buscar películas"
             />
           </form>
 
@@ -64,41 +95,95 @@ export const Menu: React.FC = () => {
             aria-label="Cerrar sesión"
             title="Cerrar sesión"
           >
-            Cerrar Sesion
+            Cerrar Sesión
           </button>
         </div>
       </header>
 
-      <main className="menu-content" role="main">
-        {categories.map((title, idx) => (
+      <main className="menu-content" role="main" id="main-content">
+        {isLoading ? (
+          <div className="loading-container">
+            <div className="loading-spinner" aria-label="Cargando películas"></div>
+            <p>Cargando películas...</p>
+          </div>
+        ) : error ? (
+          <div className="error-container" role="alert">
+            <h2>Error al cargar películas</h2>
+            <p>{error}</p>
+            <button onClick={loadFilms} className="retry-btn">
+              Reintentar
+            </button>
+          </div>
+        ) : films.length === 0 ? (
+          <div className="empty-container">
+            <p>No hay películas disponibles</p>
+          </div>
+        ) : (
           <section
             className="category-section"
-            key={idx}
-            aria-labelledby={`cat-${idx}`}
+            aria-labelledby="all-films-heading"
           >
             <div className="category-header">
-              <h2 id={`cat-${idx}`}>{title}</h2>
+              <h2 id="all-films-heading">Todas las Películas</h2>
               <span className="accent-line" aria-hidden="true" />
             </div>
 
             <div className="cards-grid" role="list">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <article
-                  key={i}
-                  className="card"
-                  role="listitem"
-                  aria-label={`${title} item ${i + 1}`}
-                >
-                  <div className="card-thumb" />
-                </article>
-              ))}
+              {films.map((film) => {
+                const filmId = film._id || film.id || '';
+                return (
+                  <article
+                    key={filmId}
+                    className="card"
+                    role="listitem"
+                    onClick={() => handleCardClick(filmId)}
+                    onKeyDown={(e) => handleCardKeyDown(e, filmId)}
+                    tabIndex={0}
+                    aria-label={`Ver detalles de ${film.name}`}
+                  >
+                    <div className="card-thumb">
+                      {film.posterUrl ? (
+                        <img 
+                          src={film.posterUrl} 
+                          alt={`Poster de ${film.name}`}
+                          loading="lazy"
+                          onError={(e) => {
+                            // Fallback si la imagen no carga
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            if (target.parentElement) {
+                              target.parentElement.classList.add('no-poster');
+                              const fallback = document.createElement('div');
+                              fallback.className = 'poster-fallback';
+                              fallback.textContent = film.name;
+                              target.parentElement.appendChild(fallback);
+                            }
+                          }}
+                        />
+                      ) : (
+                        <div className="poster-fallback">
+                          {film.name}
+                        </div>
+                      )}
+                    </div>
+                    <div className="card-info">
+                      <h3 className="card-title">{film.name}</h3>
+                      <p className="card-genre">{film.genre}</p>
+                      {film.releaseDate && (
+                        <p className="card-year">
+                          {new Date(film.releaseDate).getFullYear()}
+                        </p>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           </section>
-        ))}
+        )}
       </main>
     </div>
   );
 };
 
 export default Menu;
-
