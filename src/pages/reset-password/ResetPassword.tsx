@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import './ResetPassword.scss';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { resetPasswordWithToken } from '../../api/userApi';
+import './ResetPassword.scss';
 
 /**
  * Reset password page: reads token from query (e.g. ?token=...)
@@ -16,11 +16,15 @@ export const ResetPassword: React.FC = () => {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [msg, setMsg] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
+  const [msg, setMsg] = useState<{
+    type: 'error' | 'success';
+    text: string;
+  } | null>(null);
 
   const validate = () => {
     if (!token) return 'Token inválido o ausente.';
-    if (password.length < 8) return 'La contraseña debe tener al menos 8 caracteres.';
+    if (password.length < 8)
+      return 'La contraseña debe tener al menos 8 caracteres.';
     if (password !== confirm) return 'Las contraseñas no coinciden.';
     return null;
   };
@@ -38,17 +42,28 @@ export const ResetPassword: React.FC = () => {
     setIsLoading(true);
     try {
       await resetPasswordWithToken(token, password);
-      setMsg({ type: 'success', text: 'Contraseña actualizada. Redirigiendo al login...' });
+      setMsg({
+        type: 'success',
+        text: 'Contraseña actualizada. Redirigiendo al login...',
+      });
       setTimeout(() => navigate('/login'), 1400);
     } catch (err: any) {
-      setMsg({ type: 'error', text: err?.message || 'No se pudo actualizar la contraseña.' });
+      setMsg({
+        type: 'error',
+        text: err?.message || 'No se pudo actualizar la contraseña.',
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="reset-password-container">
+    <div
+      className="reset-password-container"
+      role="main"
+      aria-live="polite"
+      aria-label="Página de restablecimiento de contraseña"
+    >
       <div className="reset-password-card">
         <h1>Restablecer contraseña</h1>
 

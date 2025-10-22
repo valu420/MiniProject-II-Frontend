@@ -293,7 +293,12 @@ export const Profile: React.FC = () => {
   };
 
   return (
-    <div className="profile-container">
+    <div
+      className="profile-container"
+      role="main"
+      aria-live="polite"
+      aria-label="Página de perfil de usuario"
+    >
       <div className="form-content">
         <button
           onClick={handleBackToMenu}

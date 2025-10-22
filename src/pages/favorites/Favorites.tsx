@@ -97,7 +97,12 @@ export const Favorites: React.FC = () => {
   }
 
   return (
-    <div className="favorites-page">
+    <div
+      className="favorites-page"
+      role="main"
+      aria-live="polite"
+      aria-label="Página de películas favoritas"
+    >
       {statusMessage && (
         <div className={`status-toast ${statusMessage.type}`}>
           {statusMessage.text}

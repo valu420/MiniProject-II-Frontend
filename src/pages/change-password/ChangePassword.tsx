@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import './ChangePassword.scss';
 import { requestPasswordReset } from '../../api/userApi';
+import './ChangePassword.scss';
 
 /**
  * Page to request password reset email.
@@ -22,23 +21,34 @@ const ChangePassword: React.FC = () => {
     try {
       await requestPasswordReset(email.trim());
       setIsSuccess(true);
-      setMessage('Se ha enviado un email con instrucciones para restablecer tu contraseña.');
+      setMessage(
+        'Se ha enviado un email con instrucciones para restablecer tu contraseña.'
+      );
     } catch (err: any) {
       setIsSuccess(false);
-      setMessage(err?.message || 'Hubo un error al enviar el correo. Por favor, inténtalo de nuevo.');
+      setMessage(
+        err?.message ||
+          'Hubo un error al enviar el correo. Por favor, inténtalo de nuevo.'
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="change-password-container">
+    <div
+      className="change-password-container"
+      role="main"
+      aria-live="polite"
+      aria-label="Página de solicitud de cambio de contraseña"
+    >
       <div className="change-password-card">
         <div className="card-content">
           <h1 className="title">Cambiar Contraseña</h1>
 
           <p className="description">
-            Introduce el correo electrónico de tu cuenta. Te enviaremos un email con instrucciones para restablecer tu contraseña.
+            Introduce el correo electrónico de tu cuenta. Te enviaremos un email
+            con instrucciones para restablecer tu contraseña.
           </p>
 
           {message && (
@@ -73,7 +83,10 @@ const ChangePassword: React.FC = () => {
 
           {isSuccess && (
             <div className="success-actions">
-              <p>Revisa tu bandeja de entrada. Si no llega, revisa la carpeta de spam.</p>
+              <p>
+                Revisa tu bandeja de entrada. Si no llega, revisa la carpeta de
+                spam.
+              </p>
               <div className="action-buttons">
                 <button
                   onClick={() => {

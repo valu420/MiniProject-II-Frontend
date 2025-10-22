@@ -80,18 +80,25 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <main className="login-page" role="main" aria-labelledby="login-title">
+    <main
+      className="login-page"
+      role="main"
+      aria-labelledby="login-title"
+      aria-live="polite"
+      aria-label="Página de inicio de sesión"
+    >
       <div className="login-card">
-        <h1 id="login-title" className="login-title">Iniciar Sesión</h1>
-        
-        <form 
-          className="login-form" 
+        <h1 id="login-title" className="login-title">
+          Iniciar Sesión
+        </h1>
+
+        <form
+          className="login-form"
           onSubmit={handleSubmit}
           aria-labelledby="login-title"
           noValidate
         >
           <label htmlFor="email">
-            
             <input
               id="email"
               type="email"
@@ -106,7 +113,6 @@ export const Login: React.FC = () => {
           </label>
 
           <label htmlFor="password">
-            
             <input
               id="password"
               type="password"
@@ -133,9 +139,9 @@ export const Login: React.FC = () => {
           )}
 
           <div className="login-actions">
-            <button 
-              type="submit" 
-              className="btn-primary" 
+            <button
+              type="submit"
+              className="btn-primary"
               disabled={loading}
               aria-busy={loading}
             >

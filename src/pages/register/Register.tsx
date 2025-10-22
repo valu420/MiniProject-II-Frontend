@@ -40,15 +40,17 @@ export const Register: React.FC = () => {
     text: string;
   } | null>(null);
 
-  const [passwordRequirements, setPasswordRequirements] = useState<PasswordRequirements>({
-    minLength: false,
-    hasUpperCase: false,
-    hasLowerCase: false,
-    hasNumber: false,
-    hasSpecialChar: false,
-  });
+  const [passwordRequirements, setPasswordRequirements] =
+    useState<PasswordRequirements>({
+      minLength: false,
+      hasUpperCase: false,
+      hasLowerCase: false,
+      hasNumber: false,
+      hasSpecialChar: false,
+    });
 
-  const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
+  const [showPasswordRequirements, setShowPasswordRequirements] =
+    useState(false);
 
   /**
    * Validate password requirements in real-time
@@ -82,9 +84,8 @@ export const Register: React.FC = () => {
 
   const handlePasswordBlur = () => {
     // Keep showing requirements if password is not empty
-    
-      setShowPasswordRequirements(false);
-    
+
+    setShowPasswordRequirements(false);
   };
 
   const isPasswordValid = (): boolean => {
@@ -202,7 +203,12 @@ export const Register: React.FC = () => {
   };
 
   return (
-    <div className="register-page">
+    <div
+      className="register-page"
+      role="main"
+      aria-live="polite"
+      aria-label="Página de registro de cuenta"
+    >
       <div className="register-card">
         <h1 className="register-title">Crear cuenta</h1>
 
@@ -283,37 +289,59 @@ export const Register: React.FC = () => {
               onBlur={handlePasswordBlur}
               required
             />
-            
+
             {/* Password requirements indicator */}
             {showPasswordRequirements && (
               <div className="password-requirements" aria-live="polite">
-                <p className="requirements-title">La contraseña debe contener:</p>
+                <p className="requirements-title">
+                  La contraseña debe contener:
+                </p>
                 <ul className="requirements-list">
-                  <li className={passwordRequirements.minLength ? 'valid' : 'invalid'}>
+                  <li
+                    className={
+                      passwordRequirements.minLength ? 'valid' : 'invalid'
+                    }
+                  >
                     <span className="requirement-icon">
                       {passwordRequirements.minLength ? '✓' : '✗'}
                     </span>
                     Mínimo 8 caracteres
                   </li>
-                  <li className={passwordRequirements.hasUpperCase ? 'valid' : 'invalid'}>
+                  <li
+                    className={
+                      passwordRequirements.hasUpperCase ? 'valid' : 'invalid'
+                    }
+                  >
                     <span className="requirement-icon">
                       {passwordRequirements.hasUpperCase ? '✓' : '✗'}
                     </span>
                     Al menos una letra mayúscula
                   </li>
-                  <li className={passwordRequirements.hasLowerCase ? 'valid' : 'invalid'}>
+                  <li
+                    className={
+                      passwordRequirements.hasLowerCase ? 'valid' : 'invalid'
+                    }
+                  >
                     <span className="requirement-icon">
                       {passwordRequirements.hasLowerCase ? '✓' : '✗'}
                     </span>
                     Al menos una letra minúscula
                   </li>
-                  <li className={passwordRequirements.hasNumber ? 'valid' : 'invalid'}>
+                  <li
+                    className={
+                      passwordRequirements.hasNumber ? 'valid' : 'invalid'
+                    }
+                  >
                     <span className="requirement-icon">
                       {passwordRequirements.hasNumber ? '✓' : '✗'}
                     </span>
                     Al menos un número
                   </li>
-                  <li className={passwordRequirements.hasSpecialChar ? 'valid' : 'invalid'}>
+                  <li
+                    className={
+                      passwordRequirements.hasSpecialChar ? 'valid' : 'invalid'
+                    }
+                  >
                     <span className="requirement-icon">
                       {passwordRequirements.hasSpecialChar ? '✓' : '✗'}
                     </span>

@@ -105,7 +105,12 @@ export const Menu: React.FC = () => {
   };
 
   return (
-    <div className="menu-page">
+    <div
+      className="menu-page"
+      role="main"
+      aria-live="polite"
+      aria-label="Menú principal de películas"
+    >
       <header className="menu-header" role="banner">
         <div className="brand">
           <div className="brand-logo" aria-hidden="true">
@@ -138,7 +143,6 @@ export const Menu: React.FC = () => {
               aria-haspopup="true"
             >
               <span className="user-icon">👤</span>
-              
             </button>
 
             {isDropdownOpen && (
@@ -227,7 +231,12 @@ export const Menu: React.FC = () => {
                             // Fallback si la imagen no carga
                             const target = e.currentTarget as HTMLImageElement;
                             target.style.display = 'none';
-                            if (target.parentElement && !target.parentElement.querySelector('.poster-fallback')) {
+                            if (
+                              target.parentElement &&
+                              !target.parentElement.querySelector(
+                                '.poster-fallback'
+                              )
+                            ) {
                               target.parentElement.classList.add('no-poster');
                               const fallback = document.createElement('div');
                               fallback.className = 'poster-fallback';
@@ -238,7 +247,6 @@ export const Menu: React.FC = () => {
                         />
                       ) : (
                         <div className="poster-fallback">{film.name}</div>
-                        
                       )}
                     </div>
                     <div className="card-info">

@@ -52,7 +52,11 @@ const AppContent: React.FC = () => {
   return (
     <>
       {!shouldHideNavbar && <Nav />}
-      <main>
+      <main
+        aria-live="polite"
+        aria-label="Contenido principal de la aplicación"
+        role="main"
+      >
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/about" element={<About />} />

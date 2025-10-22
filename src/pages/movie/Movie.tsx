@@ -15,7 +15,9 @@ import './Movie.css';
 
 const resolvePosterSrc = (path?: string) => {
   if (!path) return '';
-  return /^https?:\/\//i.test(path) ? path : `/${String(path).replace(/^\/+/, '')}`;
+  return /^https?:\/\//i.test(path)
+    ? path
+    : `/${String(path).replace(/^\/+/, '')}`;
 };
 
 interface Movie {
@@ -221,7 +223,13 @@ export const Movie: React.FC = () => {
   const posterSrc = resolvePosterSrc(rawPoster);
 
   return (
-    <main className="movie-page" role="main" aria-labelledby="movie-title">
+    <main
+      className="movie-page"
+      role="main"
+      aria-labelledby="movie-title"
+      aria-live="polite"
+      aria-label="Página de detalles de película"
+    >
       <button
         onClick={() => navigate('/menu')}
         className="back-btn"
@@ -265,7 +273,10 @@ export const Movie: React.FC = () => {
                   onError={(e) => {
                     const target = e.currentTarget as HTMLImageElement;
                     target.style.display = 'none';
-                    if (target.parentElement && !target.parentElement.querySelector('.poster-fallback')) {
+                    if (
+                      target.parentElement &&
+                      !target.parentElement.querySelector('.poster-fallback')
+                    ) {
                       const fallback = document.createElement('div');
                       fallback.className = 'poster-fallback';
                       fallback.textContent = movie.name;
