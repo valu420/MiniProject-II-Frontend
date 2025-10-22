@@ -40,7 +40,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Back Button */
@@ -104,8 +106,8 @@
 
 /* Media Section */
 .movie-media {
-  display: flex;              
-  justify-content: center;    
+  display: flex;
+  justify-content: center;
   margin-bottom: 24px;
 }
 
@@ -138,20 +140,22 @@
 /* Movie Info */
 .movie-info {
   background: var(--card-bg);
-  padding: 24px;              /* CAMBIA: antes 100px */
+  padding: 24px;
+  /* CAMBIA: antes 100px */
   border-radius: 12px;
   border: 1px solid rgba(0, 208, 132, 0.1);
   margin-top: 8px;
 }
 
-.movie-info-content {         
+.movie-info-content {
   display: grid;
   grid-template-columns: 220px 1fr;
   gap: 24px;
   align-items: start;
 }
 
-.movie-info .movie-poster {   /* AÑADE */
+.movie-info .movie-poster {
+  /* AÑADE */
   max-width: 220px;
 }
 
@@ -171,15 +175,56 @@
 }
 
 .favorite-btn {
-  background: none;
-  border: none;
-  font-size: 28px;
+  background: rgba(0, 208, 132, 0.1);
+  border: 1px solid rgba(0, 208, 132, 0.3);
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 24px;
   cursor: pointer;
-  transition: transform 0.2s ease;
+  transition: all 0.3s ease;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 50px;
 }
 
 .favorite-btn:hover {
-  transform: scale(1.1);
+  transform: scale(1.05);
+  background: rgba(0, 208, 132, 0.15);
+  border-color: rgba(0, 208, 132, 0.5);
+}
+
+.favorite-btn.active {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  animation: heartBeat 0.3s ease;
+}
+
+.favorite-btn.active:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+@keyframes heartBeat {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  25% {
+    transform: scale(1.2);
+  }
+
+  50% {
+    transform: scale(0.95);
+  }
+
+  75% {
+    transform: scale(1.1);
+  }
 }
 
 .movie-meta {
@@ -392,20 +437,23 @@
   }
 }
 
-.movie-info .movie-poster img {  /* AÑADE */
+.movie-info .movie-poster img {
+  /* AÑADE */
   width: 100%;
   border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 @media (max-width: 968px) {
-  
 
-  .movie-info-content {       /* AÑADE */
+
+  .movie-info-content {
+    /* AÑADE */
     grid-template-columns: 1fr;
   }
 
-  .movie-info .movie-poster { /* AÑADE */
+  .movie-info .movie-poster {
+    /* AÑADE */
     max-width: 240px;
     margin: 0 auto 16px;
   }

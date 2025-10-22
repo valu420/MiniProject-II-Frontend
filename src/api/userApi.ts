@@ -317,3 +317,87 @@ export const deleteUser = async (userId: string, token?: string): Promise<{ mess
     throw error instanceof Error ? error : new Error('Network error');
   }
 };
+
+/**
+ * Get user's favorite films
+ * @param token - Authentication token
+ * @returns Promise with array of favorite films
+ */
+export const getUserFavorites = async (token?: string): Promise<any[]> => {
+  try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const response = await secureFetch(`${API_BASE_URL}/users/favorites`, {
+      method: 'GET',
+      headers,
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || 'Error getting favorites');
+    }
+
+    const data = await response.json();
+    return data.favorites || [];
+  } catch (error) {
+    console.error('getUserFavorites error:', error);
+    throw error instanceof Error ? error : new Error('Network error');
+  }
+};
+
+/**
+ * Add a film to user's favorites
+ * @param filmId - The film ID to add
+ * @param token - Authentication token
+ * @returns Promise with success message
+ */
+export const addFavorite = async (filmId: string, token?: string): Promise<{ message?: string }> => {
+  try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const response = await secureFetch(`${API_BASE_URL}/users/favorites/${filmId}`, {
+      method: 'POST',
+      headers,
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || 'Error adding to favorites');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('addFavorite error:', { filmId, error });
+    throw error instanceof Error ? error : new Error('Network error');
+  }
+};
+
+/**
+ * Remove a film from user's favorites
+ * @param filmId - The film ID to remove
+ * @param token - Authentication token
+ * @returns Promise with success message
+ */
+export const removeFavorite = async (filmId: string, token?: string): Promise<{ message?: string }> => {
+  try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const response = await secureFetch(`${API_BASE_URL}/users/favorites/${filmId}`, {
+      method: 'DELETE',
+      headers,
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || 'Error removing from favorites');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('removeFavorite error:', { filmId, error });
+    throw error instanceof Error ? error : new Error('Network error');
+  }
+};
