@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { getAllFilms, getFilmsByGenre, Film } from '../../api/filmApi';
+import { useNavigate } from 'react-router-dom';
+import { Film, getAllFilms } from '../../api/filmApi';
 import './Menu.css';
 
 /**
@@ -14,6 +14,7 @@ export const Menu: React.FC = () => {
   const [films, setFilms] = useState<Film[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useEffect(() => {
     // Obtener información del usuario desde localStorage
@@ -21,10 +22,28 @@ export const Menu: React.FC = () => {
     if (userData) {
       setUser(JSON.parse(userData));
     }
-    
+
     // Cargar películas
     loadFilms();
   }, []);
+
+  // Cerrar dropdown al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (isDropdownOpen && !target.closest('.user-menu')) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener('click', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [isDropdownOpen]);
 
   const loadFilms = async () => {
     try {
@@ -47,6 +66,25 @@ export const Menu: React.FC = () => {
 
     // Redirigir al login
     navigate('/login');
+  };
+
+  const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
+
+  const handleProfileClick = () => {
+    setIsDropdownOpen(false);
+    navigate('/profile');
+  };
+
+  const handleFavoritesClick = () => {
+    setIsDropdownOpen(false);
+    navigate('/favorites');
+  };
+
+  const handleLogoutClick = () => {
+    setIsDropdownOpen(false);
+    handleLogout();
   };
 
   const handleCardClick = (filmId: string) => {
@@ -85,25 +123,51 @@ export const Menu: React.FC = () => {
             />
           </form>
 
-          <Link to="/profile" className="user-btn" aria-label="User profile">
-            <span className="user-icon">👤</span>
-          </Link>
+          <div className="user-menu">
+            <button
+              onClick={toggleDropdown}
+              className="user-btn"
+              aria-label="Menú de usuario"
+              aria-expanded={isDropdownOpen}
+              aria-haspopup="true"
+            >
+              <span className="user-icon">👤</span>
+              
+            </button>
 
-          <button
-            onClick={handleLogout}
-            className="logout-btn"
-            aria-label="Cerrar sesión"
-            title="Cerrar sesión"
-          >
-            Cerrar Sesión
-          </button>
+            {isDropdownOpen && (
+              <div className="dropdown-menu">
+                <button onClick={handleProfileClick} className="dropdown-item">
+                  <span className="dropdown-icon">👤</span>
+                  Ver perfil
+                </button>
+                <button
+                  onClick={handleFavoritesClick}
+                  className="dropdown-item"
+                >
+                  <span className="dropdown-icon">⭐</span>
+                  Mis favoritos
+                </button>
+                <button
+                  onClick={handleLogoutClick}
+                  className="dropdown-item logout"
+                >
+                  <span className="dropdown-icon">🚪</span>
+                  Cerrar sesión
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
       <main className="menu-content" role="main" id="main-content">
         {isLoading ? (
           <div className="loading-container">
-            <div className="loading-spinner" aria-label="Cargando películas"></div>
+            <div
+              className="loading-spinner"
+              aria-label="Cargando películas"
+            ></div>
             <p>Cargando películas...</p>
           </div>
         ) : error ? (
@@ -143,8 +207,8 @@ export const Menu: React.FC = () => {
                   >
                     <div className="card-thumb">
                       {film.posterUrl ? (
-                        <img 
-                          src={film.posterUrl} 
+                        <img
+                          src={film.posterUrl}
                           alt={`Poster de ${film.name}`}
                           loading="lazy"
                           onError={(e) => {
@@ -161,9 +225,7 @@ export const Menu: React.FC = () => {
                           }}
                         />
                       ) : (
-                        <div className="poster-fallback">
-                          {film.name}
-                        </div>
+                        <div className="poster-fallback">{film.name}</div>
                       )}
                     </div>
                     <div className="card-info">
