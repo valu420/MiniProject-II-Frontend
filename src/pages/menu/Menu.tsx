@@ -8,6 +8,12 @@ import './Menu.css';
  * Loads films from backend and displays them with posters.
  * @returns {JSX.Element}
  */
+
+const resolvePosterSrc = (path?: string) => {
+  if (!path) return '';
+  return /^https?:\/\//i.test(path) ? path : `/${path.replace(/^\/+/, '')}`;
+};
+
 export const Menu: React.FC = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
@@ -131,6 +137,12 @@ export const Menu: React.FC = () => {
             <div className="cards-grid" role="list">
               {films.map((film) => {
                 const filmId = film._id || film.id || '';
+                const posterPath =
+                  film.posterUrl ??
+                  (film as any).posterImage ??
+                  (film as any).poster ??
+                  '';
+                const posterSrc = resolvePosterSrc(posterPath);
                 return (
                   <article
                     key={filmId}
@@ -142,16 +154,16 @@ export const Menu: React.FC = () => {
                     aria-label={`Ver detalles de ${film.name}`}
                   >
                     <div className="card-thumb">
-                      {film.posterUrl ? (
-                        <img 
-                          src={film.posterUrl} 
+                      {posterSrc ? (
+                        <img
+                          src={posterSrc}
                           alt={`Poster de ${film.name}`}
                           loading="lazy"
                           onError={(e) => {
                             // Fallback si la imagen no carga
-                            const target = e.target as HTMLImageElement;
+                            const target = e.currentTarget as HTMLImageElement;
                             target.style.display = 'none';
-                            if (target.parentElement) {
+                            if (target.parentElement && !target.parentElement.querySelector('.poster-fallback')) {
                               target.parentElement.classList.add('no-poster');
                               const fallback = document.createElement('div');
                               fallback.className = 'poster-fallback';
@@ -161,9 +173,7 @@ export const Menu: React.FC = () => {
                           }}
                         />
                       ) : (
-                        <div className="poster-fallback">
-                          {film.name}
-                        </div>
+                        <div className="poster-fallback">{film.name}</div>
                       )}
                     </div>
                     <div className="card-info">

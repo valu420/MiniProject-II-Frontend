@@ -7,6 +7,8 @@
   --accent: #00d084;
   --error: #ef4444;
   --success: #10b981;
+  --video-max-width: 1060px;    /* ancho máximo del reproductor */
+  --video-aspect: 16 / 9;
 }
 
 .movie-page {
@@ -116,8 +118,8 @@
 .movie-video {
   position: relative;
   width: 200%;                
-  max-width: 960px;           
-  aspect-ratio: 16 / 9;      
+  max-width: var(--video-max-width);           
+  aspect-ratio: var(--video-aspect);      
   height: auto;               
   overflow: hidden;
   border-radius: 12px;

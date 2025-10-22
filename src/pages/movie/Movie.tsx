@@ -3,6 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getFilmById, getStreamingInfo, type Film, type StreamingInfo } from '../../api/filmApi';
 import './Movie.css';
 
+const resolvePosterSrc = (path?: string) => {
+  if (!path) return '';
+  return /^https?:\/\//i.test(path) ? path : `/${String(path).replace(/^\/+/, '')}`;
+};
+
 interface Movie {
   _id: string;
   title: string;
@@ -146,6 +151,13 @@ export const Movie: React.FC = () => {
 
   const videoSrc = streamingInfo?.streamUrl || movie.url;
 
+  const rawPoster =
+    (movie as any).posterUrl ??
+    (movie as any).posterImage ??
+    (movie as any).poster ??
+    '';
+  const posterSrc = resolvePosterSrc(rawPoster);
+
   return (
     <main className="movie-page" role="main" aria-labelledby="movie-title">
       <button onClick={() => navigate('/menu')} className="back-btn" aria-label="Volver al menú">
@@ -176,10 +188,23 @@ export const Movie: React.FC = () => {
 
         {/* Información */}
         <section className="movie-info" aria-labelledby="movie-title">
-          <div className="movie-info-content">{/* AÑADIDO: contenedor grid poster + texto */}
+          <div className="movie-info-content">
             <div className="movie-poster">
-              {movie.posterUrl ? (
-                <img src={movie.posterUrl} alt={`Poster de ${movie.name}`} />
+              {posterSrc ? (
+                <img
+                  src={posterSrc}
+                  alt={`Poster de ${movie.name}`}
+                  onError={(e) => {
+                    const target = e.currentTarget as HTMLImageElement;
+                    target.style.display = 'none';
+                    if (target.parentElement && !target.parentElement.querySelector('.poster-fallback')) {
+                      const fallback = document.createElement('div');
+                      fallback.className = 'poster-fallback';
+                      fallback.textContent = movie.name;
+                      target.parentElement.appendChild(fallback);
+                    }
+                  }}
+                />
               ) : (
                 <div className="poster-fallback" aria-label="Sin poster">
                   {movie.name}
