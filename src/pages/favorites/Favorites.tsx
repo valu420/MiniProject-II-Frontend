@@ -71,6 +71,23 @@ export const Favorites: React.FC = () => {
     navigate(`/movie/${filmId}`);
   };
 
+  // Agrupar favoritos por género
+  const groupFavoritesByGenre = () => {
+    const grouped: Record<string, Film[]> = {};
+
+    favorites.forEach((film) => {
+      const genre = film.genre || 'Sin categoría';
+      if (!grouped[genre]) {
+        grouped[genre] = [];
+      }
+      grouped[genre].push(film);
+    });
+
+    return grouped;
+  };
+
+  const favoritesByGenre = groupFavoritesByGenre();
+
   if (isLoading) {
     return (
       <div className="favorites-page">
@@ -131,100 +148,113 @@ export const Favorites: React.FC = () => {
           </Link>
         </div>
       ) : (
-        <div className="favorites-grid">
-          {favorites.map((film) => {
-            const filmId = film._id || film.id || '';
-            // Obtener la URL del poster desde el campo posterImage del backend
-            const posterImageField = (film as any).posterImage;
-            let posterUrl: string | undefined;
-
-            if (posterImageField) {
-              // Si es una URL completa (empieza con http), usarla directamente
-              if (posterImageField.startsWith('http')) {
-                posterUrl = posterImageField;
-              } else {
-                // Si es solo un nombre de archivo, buscar en public/
-                posterUrl = `/${posterImageField}`;
-              }
-            } else {
-              posterUrl = film.posterUrl;
-            }
-
-            return (
-              <div key={filmId} className="favorite-card">
-                <div
-                  className="favorite-poster"
-                  onClick={() => handleMovieClick(filmId)}
-                  style={{
-                    backgroundImage: posterUrl
-                      ? `url(${posterUrl})`
-                      : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                  }}
-                >
-                  {!posterUrl && (
-                    <div className="no-poster">
-                      <i className="fa-solid fa-film"></i>
-                    </div>
-                  )}
-                  <div className="favorite-overlay">
-                    <button
-                      className="watch-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleMovieClick(filmId);
-                      }}
-                    >
-                      <i className="fa-solid fa-play"></i> Ver película
-                    </button>
-                  </div>
-                </div>
-
-                <div className="favorite-info">
-                  <h3 onClick={() => handleMovieClick(filmId)}>{film.name}</h3>
-
-                  <div className="favorite-meta">
-                    <span className="genre">
-                      <i className="fa-solid fa-tags"></i> {film.genre}
-                    </span>
-                    {film.releaseDate && (
-                      <span className="year">
-                        <i className="fa-solid fa-calendar"></i>{' '}
-                        {new Date(film.releaseDate).getFullYear()}
-                      </span>
-                    )}
-                  </div>
-
-                  {film.rating && (
-                    <div className="favorite-rating">
-                      <i className="fa-solid fa-star"></i>
-                      <span>{film.rating.toFixed(1)}</span>
-                      {film.ratingsCount && (
-                        <span className="ratings-count">
-                          ({film.ratingsCount})
-                        </span>
-                      )}
-                    </div>
-                  )}
-
-                  <p className="favorite-description">
-                    {film.description?.length > 120
-                      ? `${film.description.substring(0, 120)}...`
-                      : film.description}
-                  </p>
-
-                  <button
-                    className="remove-btn"
-                    onClick={() => handleRemoveFavorite(filmId)}
-                  >
-                    <i className="fa-solid fa-heart-crack"></i> Eliminar
-                  </button>
-                </div>
+        <>
+          {Object.entries(favoritesByGenre).map(([genre, genreFilms]) => (
+            <div key={genre} className="favorites-category">
+              <div className="category-header">
+                <h2>{genre}</h2>
+                <span className="category-count">
+                  {genreFilms.length}{' '}
+                  {genreFilms.length === 1 ? 'película' : 'películas'}
+                </span>
               </div>
-            );
-          })}
-        </div>
+
+              <div className="favorites-grid">
+                {genreFilms.map((film) => {
+                  const filmId = film._id || film.id || '';
+                  const posterImageField = (film as any).posterImage;
+                  let posterUrl: string | undefined;
+
+                  if (posterImageField) {
+                    if (posterImageField.startsWith('http')) {
+                      posterUrl = posterImageField;
+                    } else {
+                      posterUrl = `/${posterImageField}`;
+                    }
+                  } else {
+                    posterUrl = film.posterUrl;
+                  }
+
+                  return (
+                    <div key={filmId} className="favorite-card">
+                      <div
+                        className="favorite-poster"
+                        onClick={() => handleMovieClick(filmId)}
+                        style={{
+                          backgroundImage: posterUrl
+                            ? `url(${posterUrl})`
+                            : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                        }}
+                      >
+                        {!posterUrl && (
+                          <div className="no-poster">
+                            <i className="fa-solid fa-film"></i>
+                          </div>
+                        )}
+                        <div className="favorite-overlay">
+                          <button
+                            className="watch-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMovieClick(filmId);
+                            }}
+                          >
+                            <i className="fa-solid fa-play"></i> Ver película
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="favorite-info">
+                        <h3 onClick={() => handleMovieClick(filmId)}>
+                          {film.name}
+                        </h3>
+
+                        <div className="favorite-meta">
+                          <span className="genre">
+                            <i className="fa-solid fa-tags"></i> {film.genre}
+                          </span>
+                          {film.releaseDate && (
+                            <span className="year">
+                              <i className="fa-solid fa-calendar"></i>{' '}
+                              {new Date(film.releaseDate).getFullYear()}
+                            </span>
+                          )}
+                        </div>
+
+                        {film.rating && (
+                          <div className="favorite-rating">
+                            <i className="fa-solid fa-star"></i>
+                            <span>{film.rating.toFixed(1)}</span>
+                            {film.totalRatings && (
+                              <span className="ratings-count">
+                                ({film.totalRatings})
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        <p className="favorite-description">
+                          {film.description?.length > 120
+                            ? `${film.description.substring(0, 120)}...`
+                            : film.description}
+                        </p>
+
+                        <button
+                          className="remove-btn"
+                          onClick={() => handleRemoveFavorite(filmId)}
+                        >
+                          <i className="fa-solid fa-heart-crack"></i> Eliminar
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </>
       )}
     </div>
   );
