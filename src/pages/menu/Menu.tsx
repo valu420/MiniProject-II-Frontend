@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Film, getAllFilms } from '../../api/filmApi';
+import { getUserFavorites } from '../../api/userApi';
 import './Menu.css';
 
 /**
@@ -18,6 +19,8 @@ export const Menu: React.FC = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [films, setFilms] = useState<Film[]>([]);
+  const [favorites, setFavorites] = useState<Film[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -29,8 +32,9 @@ export const Menu: React.FC = () => {
       setUser(JSON.parse(userData));
     }
 
-    // Cargar películas
+    // Cargar películas y favoritos
     loadFilms();
+    loadFavorites();
   }, []);
 
   // Cerrar dropdown al hacer clic fuera
@@ -64,6 +68,87 @@ export const Menu: React.FC = () => {
       setIsLoading(false);
     }
   };
+
+  const loadFavorites = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return; // Si no hay token, no cargar favoritos
+
+      const favoritesData = await getUserFavorites(token);
+      setFavorites(favoritesData);
+    } catch (err: any) {
+      console.error('Error loading favorites:', err);
+      // No mostrar error si falla cargar favoritos, solo no mostrar la sección
+      setFavorites([]);
+    }
+  };
+
+  // Agrupar películas por género
+  const groupFilmsByGenre = () => {
+    const grouped: Record<string, Film[]> = {};
+
+    films.forEach((film) => {
+      const genre = film.genre || 'Sin categoría';
+      if (!grouped[genre]) {
+        grouped[genre] = [];
+      }
+      grouped[genre].push(film);
+    });
+
+    return grouped;
+  };
+
+  // Filtrar películas por búsqueda
+  const getFilteredFilms = () => {
+    if (!searchQuery.trim()) {
+      return films;
+    }
+
+    const query = searchQuery.toLowerCase();
+    return films.filter(
+      (film) =>
+        film.name.toLowerCase().includes(query) ||
+        film.genre.toLowerCase().includes(query)
+    );
+  };
+
+  const filteredFilms = getFilteredFilms();
+
+  // Agrupar películas filtradas por género
+  const groupFilteredFilmsByGenre = () => {
+    const grouped: Record<string, Film[]> = {};
+
+    filteredFilms.forEach((film) => {
+      const genre = film.genre || 'Sin categoría';
+      if (!grouped[genre]) {
+        grouped[genre] = [];
+      }
+      grouped[genre].push(film);
+    });
+
+    return grouped;
+  };
+
+  const filmsByGenre = searchQuery.trim()
+    ? groupFilteredFilmsByGenre()
+    : groupFilmsByGenre();
+
+  // Filtrar favoritos por búsqueda
+  const getFilteredFavorites = () => {
+    if (!searchQuery.trim()) {
+      return favorites;
+    }
+
+    const query = searchQuery.toLowerCase();
+    return favorites.filter(
+      (film) =>
+        film.name.toLowerCase().includes(query) ||
+        film.genre.toLowerCase().includes(query) ||
+        film.description?.toLowerCase().includes(query)
+    );
+  };
+
+  const filteredFavorites = getFilteredFavorites();
 
   const handleLogout = () => {
     // Limpiar localStorage
@@ -129,9 +214,21 @@ export const Menu: React.FC = () => {
             <input
               type="search"
               className="search-input"
-              placeholder="Buscar"
+              placeholder="Buscar películas por título, género"
               aria-label="Buscar películas"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
+            {searchQuery && (
+              <button
+                type="button"
+                className="clear-search-btn"
+                onClick={() => setSearchQuery('')}
+                aria-label="Limpiar búsqueda"
+              >
+                ✕
+              </button>
+            )}
           </form>
 
           <div className="user-menu">
@@ -192,77 +289,184 @@ export const Menu: React.FC = () => {
           <div className="empty-container">
             <p>No hay películas disponibles</p>
           </div>
+        ) : filteredFilms.length === 0 ? (
+          <div className="empty-container">
+            <p>No se encontraron películas para "{searchQuery}"</p>
+            <button onClick={() => setSearchQuery('')} className="retry-btn">
+              Limpiar búsqueda
+            </button>
+          </div>
         ) : (
-          <section
-            className="category-section"
-            aria-labelledby="all-films-heading"
-          >
-            <div className="category-header">
-              <h2 id="all-films-heading">Todas las Películas</h2>
-              <span className="accent-line" aria-hidden="true" />
-            </div>
+          <>
+            {/* Mostrar contador de resultados si hay búsqueda */}
+            {searchQuery.trim() && (
+              <div className="search-results-info">
+                <p>
+                  Se encontraron <strong>{filteredFilms.length}</strong>{' '}
+                  {filteredFilms.length === 1 ? 'película' : 'películas'} para "
+                  {searchQuery}"
+                </p>
+              </div>
+            )}
 
-            <div className="cards-grid" role="list">
-              {films.map((film) => {
-                const filmId = film._id || film.id || '';
-                const posterPath =
-                  film.posterUrl ??
-                  (film as any).posterImage ??
-                  (film as any).poster ??
-                  '';
-                const posterSrc = resolvePosterSrc(posterPath);
-                return (
-                  <article
-                    key={filmId}
-                    className="card"
-                    role="listitem"
-                    onClick={() => handleCardClick(filmId)}
-                    onKeyDown={(e) => handleCardKeyDown(e, filmId)}
-                    tabIndex={0}
-                    aria-label={`Ver detalles de ${film.name}`}
-                  >
-                    <div className="card-thumb">
-                      {posterSrc ? (
-                        <img
-                          src={posterSrc}
-                          alt={`Poster de ${film.name}`}
-                          loading="lazy"
-                          onError={(e) => {
-                            // Fallback si la imagen no carga
-                            const target = e.currentTarget as HTMLImageElement;
-                            target.style.display = 'none';
-                            if (
-                              target.parentElement &&
-                              !target.parentElement.querySelector(
-                                '.poster-fallback'
-                              )
-                            ) {
-                              target.parentElement.classList.add('no-poster');
-                              const fallback = document.createElement('div');
-                              fallback.className = 'poster-fallback';
-                              fallback.textContent = film.name;
-                              target.parentElement.appendChild(fallback);
-                            }
-                          }}
-                        />
-                      ) : (
-                        <div className="poster-fallback">{film.name}</div>
-                      )}
-                    </div>
-                    <div className="card-info">
-                      <h3 className="card-title">{film.name}</h3>
-                      <p className="card-genre">{film.genre}</p>
-                      {film.releaseDate && (
-                        <p className="card-year">
-                          {new Date(film.releaseDate).getFullYear()}
-                        </p>
-                      )}
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          </section>
+            {/* Sección de Mis Favoritos - solo si no hay búsqueda o hay favoritos filtrados */}
+            {!searchQuery.trim() && favorites.length > 0 && (
+              <section
+                className="category-section favorites-section"
+                aria-labelledby="favorites-heading"
+              >
+                <div className="category-header">
+                  <h2 id="favorites-heading">
+                    <span className="favorites-icon">❤️</span> Mis Favoritos
+                  </h2>
+                  <span className="accent-line" aria-hidden="true" />
+                </div>
+
+                <div className="cards-grid" role="list">
+                  {favorites.slice(0, 8).map((film) => {
+                    const filmId = film._id || film.id || '';
+                    const posterPath =
+                      film.posterUrl ??
+                      (film as any).posterImage ??
+                      (film as any).poster ??
+                      '';
+                    const posterSrc = resolvePosterSrc(posterPath);
+                    return (
+                      <article
+                        key={filmId}
+                        className="card favorite-card"
+                        role="listitem"
+                        onClick={() => handleCardClick(filmId)}
+                        onKeyDown={(e) => handleCardKeyDown(e, filmId)}
+                        tabIndex={0}
+                        aria-label={`Ver detalles de ${film.name}`}
+                      >
+                        <div className="card-thumb">
+                          <div className="favorite-badge">❤️</div>
+                          {posterSrc ? (
+                            <img
+                              src={posterSrc}
+                              alt={`Poster de ${film.name}`}
+                              loading="lazy"
+                              onError={(e) => {
+                                const target =
+                                  e.currentTarget as HTMLImageElement;
+                                target.style.display = 'none';
+                                if (
+                                  target.parentElement &&
+                                  !target.parentElement.querySelector(
+                                    '.poster-fallback'
+                                  )
+                                ) {
+                                  target.parentElement.classList.add(
+                                    'no-poster'
+                                  );
+                                  const fallback =
+                                    document.createElement('div');
+                                  fallback.className = 'poster-fallback';
+                                  fallback.textContent = film.name;
+                                  target.parentElement.appendChild(fallback);
+                                }
+                              }}
+                            />
+                          ) : (
+                            <div className="poster-fallback">{film.name}</div>
+                          )}
+                        </div>
+                        <div className="card-info">
+                          <h3 className="card-title">{film.name}</h3>
+                          <p className="card-genre">{film.genre}</p>
+                          {film.releaseDate && (
+                            <p className="card-year">
+                              {new Date(film.releaseDate).getFullYear()}
+                            </p>
+                          )}
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+
+            {/* Categorías por género */}
+            {Object.entries(filmsByGenre).map(([genre, genreFilms]) => (
+              <section
+                key={genre}
+                className="category-section"
+                aria-labelledby={`${genre}-heading`}
+              >
+                <div className="category-header">
+                  <h2 id={`${genre}-heading`}>{genre}</h2>
+                  <span className="accent-line" aria-hidden="true" />
+                </div>
+
+                <div className="cards-grid" role="list">
+                  {genreFilms.map((film) => {
+                    const filmId = film._id || film.id || '';
+                    const posterPath =
+                      film.posterUrl ??
+                      (film as any).posterImage ??
+                      (film as any).poster ??
+                      '';
+                    const posterSrc = resolvePosterSrc(posterPath);
+                    return (
+                      <article
+                        key={filmId}
+                        className="card"
+                        role="listitem"
+                        onClick={() => handleCardClick(filmId)}
+                        onKeyDown={(e) => handleCardKeyDown(e, filmId)}
+                        tabIndex={0}
+                        aria-label={`Ver detalles de ${film.name}`}
+                      >
+                        <div className="card-thumb">
+                          {posterSrc ? (
+                            <img
+                              src={posterSrc}
+                              alt={`Poster de ${film.name}`}
+                              loading="lazy"
+                              onError={(e) => {
+                                const target =
+                                  e.currentTarget as HTMLImageElement;
+                                target.style.display = 'none';
+                                if (
+                                  target.parentElement &&
+                                  !target.parentElement.querySelector(
+                                    '.poster-fallback'
+                                  )
+                                ) {
+                                  target.parentElement.classList.add(
+                                    'no-poster'
+                                  );
+                                  const fallback =
+                                    document.createElement('div');
+                                  fallback.className = 'poster-fallback';
+                                  fallback.textContent = film.name;
+                                  target.parentElement.appendChild(fallback);
+                                }
+                              }}
+                            />
+                          ) : (
+                            <div className="poster-fallback">{film.name}</div>
+                          )}
+                        </div>
+                        <div className="card-info">
+                          <h3 className="card-title">{film.name}</h3>
+                          <p className="card-genre">{film.genre}</p>
+                          {film.releaseDate && (
+                            <p className="card-year">
+                              {new Date(film.releaseDate).getFullYear()}
+                            </p>
+                          )}
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
+          </>
         )}
       </main>
     </div>

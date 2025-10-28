@@ -35,6 +35,15 @@ html {
   box-sizing: border-box;
 }
 
+.movie-player {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;       /* cover corta para mantener uniformidad */
+  object-position: center;
+  border-radius: 8px;
+}
+
 /* Loading & Error States */
 .movie-loading,
 .movie-error {
@@ -142,10 +151,10 @@ html {
 .movie-video {
   position: relative;
   width: 100%;
-  max-width: 100%;
-  aspect-ratio: var(--video-aspect);
+  max-width: 1380px;
+  aspect-ratio: 16/9;
   height: auto;
-  overflow: hidden;
+  overflow: visible;
   border-radius: 12px;
   margin: 0 auto;
 }
@@ -183,7 +192,7 @@ html {
 }
 
 .movie-info .movie-poster {
-  /* AÑADE */
+  
   max-width: 220px;
   width: 100%;
   min-width: 0;
@@ -438,12 +447,13 @@ html {
   padding: 16px;
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.05);
+  position: relative;
 }
 
 .comment-header {
   display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
+  align-items: center;
+  gap: 12px;
 }
 
 .comment-author {
@@ -454,6 +464,7 @@ html {
 .comment-date {
   color: var(--muted);
   font-size: 12px;
+  margin-left: auto;
 }
 
 .comment-text {
@@ -546,4 +557,266 @@ html {
   max-width: 100%;
   border-radius: 10px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.options-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.04);
+  color: var(--accent, #12b03d);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background .12s ease, transform .08s ease, box-shadow .12s ease;
+  box-shadow: none;
+}
+
+.options-btn::before {
+  content: "⋯";
+  display: inline-block;
+  transform: translateY(-1px);
+  letter-spacing: -2px;
+}
+
+.options-btn:hover,
+.options-btn:focus {
+  background: rgba(255,255,255,0.04);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.5);
+  outline: none;
+}
+
+/* contenedor de acciones, oculto por defecto */
+.comment-actions {
+  display: none;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+/* cuando se abre */
+.comment-actions.open {
+  display: inline-flex;
+}
+
+/* estilos básicos para los botones dentro de comment-actions */
+.comment-actions .btn {
+  padding: 6px 10px;
+  font-size: 13px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+.comment-actions .btn.danger {
+  background: linear-gradient(180deg,#ff6b6b 0%,#e04444 100%);
+  color: #fff;
+}
+
+/* Mobile: mostrar acciones en columna */
+@media (max-width: 520px) {
+  .options-btn { padding: 8px 10px; }
+  .comment-actions.open { flex-direction: column; width: 100%; }
+  .comment-actions .btn { width: 100%; }
+}
+
+.author-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.options-popover {
+  position: absolute; /* JS colocará left/top */
+  display: none;
+  z-index: 9999;
+  min-width: 120px;
+  max-width: calc(100vw - 32px);
+  box-sizing: border-box;
+  background: rgba(10,10,10,0.98);
+  border: 1px solid rgba(255,255,255,0.03);
+  border-radius: 6px;
+  padding: 8px 6px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  gap: 6px;
+  will-change: left, top;
+  
+}
+
+
+
+/* caso extremo: centrar hacia la derecha */
+.options-popover.align-right {
+  right: 50%;
+  left: auto;
+  transform: translateX(120%);
+}
+
+/* límite de ancho y ruptura de palabras */
+
+
+.options-popover.open {display: flex; flex-direction: column; }
+
+
+.options-popover.align-right { /* fallback centrado */ transform: translateX(-100); }
+
+
+.options-popover .popover-item {
+  background: transparent;
+  border: none;
+  color: #0ae08f;
+  text-transform: uppercase;
+  text-align: left;
+  padding: 6px 8px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.options-popover .popover-item:hover { background: rgba(255,255,255,0.02); }
+
+.options-popover .popover-item.danger { color: #ff7b7b; font-weight: 800; }
+
+/* si falta espacio en móvil, se muestra hacia la izquierda */
+@media (max-width: 520px) {
+  .options-popover { right: auto; left: 0; top: 34px; }
+}
+
+.author-row .comment-author { margin-right: 6px; }
+.options-btn > * { display: none; }
+.options-popover {
+  top: 36px; /* un poco más abajo para el botón circular */
+  right: -20px;
+}
+
+.edit-textarea {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  resize: vertical;
+  box-sizing: border-box;
+  margin-top: 8px;
+}
+
+.edit-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0, 208, 132, 0.08);
+}
+
+/* si quieres que el Enter guarde, muestra pista pequeña */
+.edit-textarea::placeholder {
+  opacity: 0.8;
+}
+
+.comment-item.is-editing .comment-text {
+  display: none;
+}
+
+/* Hacer que el textarea de edición tenga el mismo aspecto/espacio que el comentario mostrado */
+.edit-textarea {
+  width: 100%;
+  min-height: 72px; /* ajusta para que ocupe espacio similar al comentario */
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(18,176,61,0.12);
+  border-radius: 8px;
+  padding: 12px;
+  color: var(--text);
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 14px;
+  resize: vertical;
+}
+
+/* Si quieres que el área de edición se integre visualmente con la caja del comentario */
+.comment-item.is-editing .edit-textarea {
+  margin-top: 8px;
+}
+.comment-actions.edit-actions {
+  display: flex !important;
+  gap: 8px;
+  margin-top: 8px;
+  align-items: center;
+}
+
+/* Botón de guardar edición — estilo coherente con el submit del form */
+.save-edit-btn {
+  background: linear-gradient(180deg, var(--accent), #06b66a);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow .12s ease;
+}
+.save-edit-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0,208,132,0.12);
+}
+.save-edit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* Asegura que el botón cancelar reutilice el estilo .btn si existe */
+.comment-actions.edit-actions .btn {
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.04);
+  color: var(--muted);
+  border-radius: 8px;
+}
+
+.movie-video-wrap { position: relative; display: block; margin-top: 12px; }
+
+.subtitle-controls {
+  display: inline-flex;
+  gap: 6px;
+  margin-top: 8px;
+  align-items: center;
+  
+}
+
+.subtitle-btn {
+  display: inline-flex;      /* mantiene centrado texto/icon */
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;       /* evita salto de línea */
+  width: 70px;
+  gap: 6px;                   /* no forzar ancho */
+  min-width: 0;              /* quitar mínimo */
+  height: 20px;              /* quitar altura fija */
+  padding: 4px 8px;          /* ajustar espacio interno al texto */
+  font-size: 12px;
+  line-height: 1;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.04);
+  color: var(--muted, #cfeee0);
+  cursor: pointer;
+}
+.subtitle-btn:hover { background: rgba(255,255,255,0.04); }
+
+.subtitle-btn.active {
+  background: linear-gradient(180deg,#12b03d 0%,#0a8b4e 100%);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(10,140,80,0.12);
+}
+
+/* Asegura que los tracks de subtítulos se muestren legibles (si quieres estilo custom) */
+.movie-video ::cue {
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  font-size: 16px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+  padding: 2px 6px;
+  border-radius: 2px;
 }

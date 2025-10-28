@@ -19,6 +19,11 @@ export const Footer: React.FC = () => {
               <li>
                 <Link to="/sitemap">Mapa del sitio</Link>
               </li>
+              <li>
+                <a href="/MANUALDEUSUARIO.pdf" target="_blank" rel="noopener noreferrer">
+                  Manual de usuario (PDF)
+                </a>
+              </li>
             </ul>
           </div>
 
