@@ -17,6 +17,7 @@ export interface Film {
   cast?: string[];
   rating?: number;
   ratingsCount?: number;
+  subtitles?: string;
 }
 
 /**

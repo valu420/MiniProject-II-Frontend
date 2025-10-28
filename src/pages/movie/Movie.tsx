@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getFilmById, getStreamingInfo, type Film, type StreamingInfo, } from '../../api/filmApi';
 import { addFavorite, getUserFavorites, removeFavorite, } from '../../api/userApi'; import './Movie.css';
@@ -43,6 +43,139 @@ export const Movie: React.FC = () => {
   // Movie  streaming
   const [movie, setMovie] = useState<Film | null>(null);
   const [streamingInfo, setStreamingInfo] = useState<StreamingInfo | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [subtitleLang, setSubtitleLang] = useState<'off' | 'es' | 'en'>('off');
+
+  const [subtitleUrls, setSubtitleUrls] = useState<Record<string, string | null>>({});
+  const srtCache = useRef<Map<string, string>>(new Map()); // original url -> blobUrl
+
+  // convierte texto SRT a WebVTT simple
+  const srtToVttText = (srt: string) => {
+    // Quita encabezados BOM si existen
+    const txt = srt.replace(/^\uFEFF/, '');
+    // Añade cabecera WEBVTT y convierte coma decimal a punto (SRT usa , para ms)
+    const lines = txt.split(/\r?\n/);
+    const out: string[] = ['WEBVTT\n'];
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      // detectar líneas de tiempo SRT: 00:00:01,500 --> 00:00:04,000
+      const timeMatch = line.match(/^(\d{2}:\d{2}:\d{2}),(\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2}),(\d{3})(.*)$/);
+      if (timeMatch) {
+        const left = `${timeMatch[1]}.${timeMatch[2]}`;
+        const right = `${timeMatch[3]}.${timeMatch[4]}`;
+        const rest = timeMatch[5] || '';
+        out.push(`${left} --> ${right}${rest}`);
+      } else {
+        out.push(line);
+      }
+    }
+    return out.join('\n');
+  };
+
+  // descarga SRT/VTT y devuelve blob URL (convierte SRT -> VTT)
+  const fetchSubtitleAsVtt = async (url: string) => {
+    if (!url) return null;
+    // usar cache si ya convertido
+    if (srtCache.current.has(url)) return srtCache.current.get(url) as string;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('No se pudo descargar subtitulo');
+      const text = await res.text();
+      const isSrt = /\.srt(?:\?|$)/i.test(url) || /^\d+\r?\n\d{2}:\d{2}:\d{2},\d{3}/m.test(text);
+      const vttText = isSrt ? srtToVttText(text) : (text.startsWith('WEBVTT') ? text : 'WEBVTT\n\n' + text);
+      const blob = new Blob([vttText], { type: 'text/vtt' });
+      const blobUrl = URL.createObjectURL(blob);
+      srtCache.current.set(url, blobUrl);
+      return blobUrl;
+    } catch (err) {
+      console.error('Error trayendo subtítulo', url, err);
+      return null;
+    }
+  };
+
+  // cuando movie.subtitles cambie, preparar blob URLs
+
+  useEffect(() => {
+    let mounted = true;
+
+    const detectLangFromUrl = (u: string) => {
+      const lower = u.toLowerCase();
+      if (lower.includes('.es.') || lower.endsWith('.es.srt') || lower.includes('-es.') || lower.includes('/es/')) return 'es';
+      if (lower.includes('.en.') || lower.endsWith('.en.srt') || lower.includes('-en.') || lower.includes('/en/')) return 'en';
+      return 'en'; // fallback
+    };
+
+    const normalizeToMap = (raw: any): Record<string, string> => {
+      const map: Record<string, string> = {};
+      if (!raw) return map;
+      if (typeof raw === 'string') {
+        map[detectLangFromUrl(raw)] = raw;
+        return map;
+      }
+      if (Array.isArray(raw)) {
+        raw.forEach((item: any, idx: number) => {
+          if (!item) return;
+          if (typeof item === 'string') {
+            map[detectLangFromUrl(item) || String(idx)] = item;
+          } else if (typeof item === 'object') {
+            const v = item as Record<string, any>;
+            const url = (v.url || v.src || v.path || v.file || v.href) as string | undefined;
+            const lang = (v.lang || v.srclang || v.language) as string | undefined;
+            if (url) map[(lang || detectLangFromUrl(url) || String(idx)).toLowerCase()] = url;
+          }
+        });
+        return map;
+      }
+      if (typeof raw === 'object') {
+        Object.entries(raw).forEach(([k, v]) => {
+          if (!v) return;
+          if (typeof v === 'string') map[k] = v;
+          else if (typeof v === 'object') {
+            const obj = v as Record<string, any>;
+            const url = (obj.url || obj.src || obj.path || obj.file || obj.href) as string | undefined;
+            if (url) map[k] = url;
+          } else {
+            map[k] = String(v);
+          }
+        });
+        return map;
+      }
+      return map;
+    };
+
+    const prepare = async () => {
+      const rawSubs = (movie as any)?.subtitles;
+      const subsMap = normalizeToMap(rawSubs);
+      // preparar cada URL (convertir SRT->VTT si hace falta)
+      for (const [lang, url] of Object.entries(subsMap)) {
+        if (!mounted) return;
+        if (!url) {
+          setSubtitleUrls((prev) => ({ ...prev, [lang]: null }));
+          continue;
+        }
+        try {
+          const blobUrl = await fetchSubtitleAsVtt(url);
+          if (!mounted) return;
+          setSubtitleUrls((prev) => ({ ...prev, [lang]: blobUrl ?? null }));
+        } catch (err) {
+          console.error('Error preparando subtítulo', lang, url, err);
+          setSubtitleUrls((prev) => ({ ...prev, [lang]: null }));
+        }
+      }
+    };
+
+    prepare();
+
+    return () => {
+      mounted = false;
+      for (const blobUrl of srtCache.current.values()) {
+        try { URL.revokeObjectURL(blobUrl); } catch (e) { /* ignore */ }
+      }
+      srtCache.current.clear();
+      setSubtitleUrls({});
+    };
+  }, [movie?.subtitles]);
+
 
   // Comments (from backend)
   const [comments, setComments] = useState<IComment[]>([]);
@@ -81,6 +214,32 @@ export const Movie: React.FC = () => {
   }, [id]);
 
   useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const applyTracks = () => {
+      const tracks = video.textTracks;
+      for (let i = 0; i < tracks.length; i += 1) {
+        const t = tracks[i];
+        // desactivar por defecto
+        t.mode = 'disabled';
+        // activar si coincide idioma seleccionado
+        if ((subtitleLang === 'es' && t.language === 'es') || (subtitleLang === 'en' && t.language === 'en')) {
+          t.mode = 'showing';
+        }
+      }
+    };
+
+    // aplicar ahora (si ya hay pistas)
+    applyTracks();
+    // y volver a aplicar cuando se carguen metadatos (pistas pueden aparecer después)
+    video.addEventListener('loadedmetadata', applyTracks);
+    return () => {
+      video.removeEventListener('loadedmetadata', applyTracks);
+    };
+  }, [subtitleLang, subtitleUrls]);
+
+  useEffect(() => {
     Object.keys(openActions).forEach((id) => {
       if (openActions[id]) adjustPopoverPosition(id);
     });
@@ -113,58 +272,73 @@ export const Movie: React.FC = () => {
     }
   };
 
-  // POST comment (uses backend)
-  const handleSubmitComment = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!newComment.trim() || !id) return;
-  const token = localStorage.getItem('token');
-  if (!token) {
-    setStatusMessage({ type: 'error', text: 'Debes iniciar sesión para comentar' });
-    setTimeout(() => setStatusMessage(null), 2000);
-    return;
-  }
-  try {
-    const created = await postComment(id, newComment.trim());
-
-    // Si el backend no devuelve el user poblado, rellenarlo con el user local
-    try {
-      const rawUser = localStorage.getItem('user');
-      if (rawUser) {
-        const localUser = JSON.parse(rawUser);
-        // asegurar estructura esperada: userId._id y userId.firstName/name
-        if (!created.userId || typeof created.userId === 'string') {
-          created.userId = {
-            _id: localUser._id || localUser.id,
-            firstName: localUser.firstName || localUser.name || localUser.username || 'Usuario',
-            lastName: localUser.lastName || ''
-          };
-        } else {
-          // si existe pero falta nombre, completarlo
-          created.userId._id = created.userId._id || localUser._id || localUser.id;
-          if (!created.userId.firstName) {
-            created.userId.firstName = localUser.firstName || localUser.name || localUser.username || 'Usuario';
-          }
+  useEffect(() => {
+    if (videoRef.current) {
+      const tracks = videoRef.current.textTracks;
+      for (let i = 0; i < tracks.length; i++) {
+        tracks[i].mode = 'disabled';
+        if (
+          (subtitleLang === 'es' && tracks[i].language === 'es') ||
+          (subtitleLang === 'en' && tracks[i].language === 'en')
+        ) {
+          tracks[i].mode = 'showing';
         }
       }
-    } catch (err) {
-      // no bloquear si falla el parseo de localStorage
-      console.warn('No se pudo poblar user local en el comentario', err);
     }
+  }, [subtitleLang]);
 
-    // asegurar createdAt y _id para el render inmediato
-    if (!created.createdAt) created.createdAt = new Date().toISOString();
-    if (!created._id) created._id = `tmp-${Date.now()}`;
+  // POST comment (uses backend)
+  const handleSubmitComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newComment.trim() || !id) return;
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setStatusMessage({ type: 'error', text: 'Debes iniciar sesión para comentar' });
+      setTimeout(() => setStatusMessage(null), 2000);
+      return;
+    }
+    try {
+      const created = await postComment(id, newComment.trim());
 
-    setComments((prev) => [created, ...prev]);
-    setNewComment('');
-    setStatusMessage({ type: 'success', text: 'Comentario publicado' });
-    setTimeout(() => setStatusMessage(null), 2000);
-  } catch (err: any) {
-    console.error('Error posting comment:', err);
-    setStatusMessage({ type: 'error', text: err?.message || 'Error al publicar comentario' });
-    setTimeout(() => setStatusMessage(null), 3000);
-  }
-};
+      // Si el backend no devuelve el user poblado, rellenarlo con el user local
+      try {
+        const rawUser = localStorage.getItem('user');
+        if (rawUser) {
+          const localUser = JSON.parse(rawUser);
+          // asegurar estructura esperada: userId._id y userId.firstName/name
+          if (!created.userId || typeof created.userId === 'string') {
+            created.userId = {
+              _id: localUser._id || localUser.id,
+              firstName: localUser.firstName || localUser.name || localUser.username || 'Usuario',
+              lastName: localUser.lastName || ''
+            };
+          } else {
+            // si existe pero falta nombre, completarlo
+            created.userId._id = created.userId._id || localUser._id || localUser.id;
+            if (!created.userId.firstName) {
+              created.userId.firstName = localUser.firstName || localUser.name || localUser.username || 'Usuario';
+            }
+          }
+        }
+      } catch (err) {
+        // no bloquear si falla el parseo de localStorage
+        console.warn('No se pudo poblar user local en el comentario', err);
+      }
+
+      // asegurar createdAt y _id para el render inmediato
+      if (!created.createdAt) created.createdAt = new Date().toISOString();
+      if (!created._id) created._id = `tmp-${Date.now()}`;
+
+      setComments((prev) => [created, ...prev]);
+      setNewComment('');
+      setStatusMessage({ type: 'success', text: 'Comentario publicado' });
+      setTimeout(() => setStatusMessage(null), 2000);
+    } catch (err: any) {
+      console.error('Error posting comment:', err);
+      setStatusMessage({ type: 'error', text: err?.message || 'Error al publicar comentario' });
+      setTimeout(() => setStatusMessage(null), 3000);
+    }
+  };
 
   const startEdit = (c: IComment) => {
     setEditingId(c._id);
@@ -316,13 +490,104 @@ export const Movie: React.FC = () => {
       <div className="movie-container">
         <section className="movie-media" aria-label="Contenido multimedia">
           <div className="movie-video">
-            <iframe
-              src={videoSrc}
-              title={`Video de ${movie.name}`}
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
+            <div className="subtitle-controls">
+              <label>Subtítulos:</label>
+              <button
+                className={`subtitle-btn ${subtitleLang === 'off' ? 'active' : ''}`}
+                onClick={() => setSubtitleLang('off')}
+              >
+                Off
+              </button>
+              <button
+                className={`subtitle-btn ${subtitleLang === 'es' ? 'active' : ''}`}
+                onClick={() => setSubtitleLang('es')}
+              >
+                Español
+              </button>
+              <button
+                className={`subtitle-btn ${subtitleLang === 'en' ? 'active' : ''}`}
+                onClick={() => setSubtitleLang('en')}
+              >
+                English
+              </button>
+            </div>
+            <video
+              ref={videoRef}
+              className="movie-player"
+              controls
+              poster={posterSrc}
+              crossOrigin="anonymous"
+              preload="auto"
+            >
+              <source src={videoSrc} type="video/mp4" />
+              
+                {(() => {
+                  const rawSubs = (movie as any)?.subtitles;
+                  if (!rawSubs) return null;
+
+                  const detectLangFromUrl = (u: string) => {
+                    const lower = u.toLowerCase();
+                    if (lower.includes('.es.') || lower.endsWith('.es.srt') || lower.includes('-es.') || lower.includes('/es/')) return 'es';
+                    if (lower.includes('.en.') || lower.endsWith('.en.srt') || lower.includes('-en.') || lower.includes('/en/')) return 'en';
+                    return undefined;
+                  };
+
+                  const entries: Array<[string, string]> = [];
+
+                  if (typeof rawSubs === 'string') {
+                    const url = rawSubs;
+                    const lang = detectLangFromUrl(url) || 'en';
+                    entries.push([lang, subtitleUrls[lang] ?? url]);
+                  } else if (Array.isArray(rawSubs)) {
+                    rawSubs.forEach((item: any, idx: number) => {
+                      let url: string | undefined;
+                      let lang: string | undefined;
+                      if (!item) return;
+                      if (typeof item === 'string') {
+                        url = item;
+                        lang = detectLangFromUrl(url) || String(idx);
+                      } else if (typeof item === 'object') {
+                        const v = item as Record<string, any>;
+                        url = (v.url || v.src || v.path || v.file || v.href) as string | undefined;
+                        lang = (v.lang || v.srclang || v.language) as string | undefined;
+                        if (!lang && url) lang = detectLangFromUrl(url);
+                      }
+                      if (url) entries.push([lang || String(idx), subtitleUrls[lang || String(idx)] ?? url]);
+                    });
+                  } else if (typeof rawSubs === 'object') {
+                    Object.entries(rawSubs).forEach(([k, v]) => {
+                      let url: string | undefined;
+                      if (!v) return;
+                      if (typeof v === 'string') url = v;
+                      else if (typeof v === 'object') {
+                        const obj = v as Record<string, any>;
+                        url = (obj.url || obj.src || obj.path || obj.file || obj.href) as string | undefined;
+                      } else url = String(v);
+                      if (url) {
+                        const langKey = String(k);
+                        entries.push([langKey, subtitleUrls[langKey] ?? url]);
+                      }
+                    });
+                  }
+
+                  return entries.map(([langKey, src], i) => {
+                    if (!src) return null;
+                    const lc = String(langKey || '').toLowerCase();
+                    const label = lc === 'es' || lc.startsWith('es-') ? 'Español' : lc === 'en' || lc.startsWith('en-') ? 'English' : `Sub ${i + 1}`;
+                    const srclang = /^[a-z]{2}(-[A-Z]{2})?$/.test(lc) ? lc : undefined;
+                    return (
+                      <track
+                        key={`${langKey}-${i}`}
+                        kind="subtitles"
+                        label={label}
+                        {...(srclang ? { srcLang: srclang } : {})}
+                        src={String(src)}
+                      />
+                    );
+                  });
+                })()}
+                Tu navegador no soporta el elemento video.
+              </video>
           </div>
         </section>
 
@@ -475,8 +740,8 @@ export const Movie: React.FC = () => {
                             }
                           }}
                         />
-                        <div className="comment-actions">
-                          <button onClick={handleSaveEdit} type="button" className="btn">Guardar</button>
+                        <div className="comment-actions edit-actions">
+                          <button onClick={handleSaveEdit} type="button" className="save-edit-btn">Guardar</button>
                           <button onClick={() => { setEditingId(null); setEditText(''); }} type="button" className="btn">Cancelar</button>
                         </div>
                       </>
