@@ -197,14 +197,45 @@
   }
 }
 
+/* Favorites Category Section */
+.favorites-category {
+  max-width: 1400px;
+  margin: 0 auto 48px;
+
+  &:last-child {
+    margin-bottom: 24px;
+  }
+
+  .category-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid rgba(0, 208, 132, 0.3);
+
+    h2 {
+      color: var(--accent);
+      font-size: 24px;
+      font-weight: 700;
+      margin: 0;
+      text-transform: capitalize;
+    }
+
+    .category-count {
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 500;
+    }
+  }
+}
+
 /* Favorites Grid */
 .favorites-grid {
-  max-width: 1400px;
-  margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 24px;
-  padding-bottom: 40px;
+  padding-bottom: 20px;
 }
 
 /* Favorite Card */

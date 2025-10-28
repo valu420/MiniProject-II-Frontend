@@ -16,8 +16,9 @@ export interface Film {
   director?: string;
   cast?: string[];
   rating?: number;
-  ratingsCount?: number;
+  totalRatings?: number;
   subtitles?: string;
+  
 }
 
 /**
@@ -165,6 +166,84 @@ export const createFilm = async (filmData: Omit<Film, '_id' | 'id'>): Promise<Fi
     return await response.json();
   } catch (error) {
     console.error('Error in createFilm:', error);
+    throw error instanceof Error ? error : new Error('Network error');
+  }
+};
+
+/**
+ * Rate a film
+ * Endpoint: POST /rating/rate/:filmId
+ */
+export const rateFilm = async (filmId: string, rate: number, token: string): Promise<any> => {
+  try {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    };
+
+    const response = await fetch(`${API_BASE_URL}/rating/rate/${filmId}`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ rate }),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Error rating film');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error in rateFilm:', error);
+    throw error instanceof Error ? error : new Error('Network error');
+  }
+};
+
+/**
+ * Update an existing rating
+ * Endpoint: PUT /rating/:ratingId
+ */
+export const updateRating = async (ratingId: string, rate: number, token: string): Promise<any> => {
+  try {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    };
+
+    const response = await fetch(`${API_BASE_URL}/rating/${ratingId}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({ rate }),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Error updating rating');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error in updateRating:', error);
+    throw error instanceof Error ? error : new Error('Network error');
+  }
+};
+
+/**
+ * Get ratings for a specific film
+ * Endpoint: GET /rating/film/:filmId
+ */
+export const getFilmRatings = async (filmId: string): Promise<{ ratings: any[], film: any }> => {
+  try {
+    const response = await secureFetch(`${API_BASE_URL}/rating/film/${filmId}`);
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Error getting film ratings');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error in getFilmRatings:', error);
     throw error instanceof Error ? error : new Error('Network error');
   }
 };
