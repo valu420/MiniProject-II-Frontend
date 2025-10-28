@@ -18,7 +18,7 @@ export interface Film {
   rating?: number;
   totalRatings?: number;
   subtitles?: string;
-  
+  subtitlesEsp?: string;
 }
 
 /**

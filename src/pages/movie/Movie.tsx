@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import {deleteCommentById, editComment, getCommentsByFilm, postComment, type IComment,} from '../../api/commentApi';
-import {getFilmById, getFilmRatings, getStreamingInfo, rateFilm, updateRating, type Film, type StreamingInfo, } from '../../api/filmApi';
-import {addFavorite, getUserFavorites, removeFavorite, } from '../../api/userApi';
+import { deleteCommentById, editComment, getCommentsByFilm, postComment, type IComment, } from '../../api/commentApi';
+import { getFilmById, getFilmRatings, getStreamingInfo, rateFilm, updateRating, type Film, type StreamingInfo, } from '../../api/filmApi';
+import { addFavorite, getUserFavorites, removeFavorite, } from '../../api/userApi';
 import './Movie.css';
 
 const resolvePosterSrc = (path?: string) => {
@@ -145,9 +145,31 @@ export const Movie: React.FC = () => {
     };
 
     const prepare = async () => {
-      const rawSubs = (movie as any)?.subtitles;
-      const subsMap = normalizeToMap(rawSubs);
-      // preparar cada URL (convertir SRT->VTT si hace falta)
+      // ahora combinamos movie.subtitles y movie.subtitlesEsp (subtitlesEsp -> 'es')
+      const rawS = (movie as any)?.subtitles;
+      const rawEsp = (movie as any)?.subtitlesEsp;
+      let combinedRaw: any = undefined;
+
+      if (!rawS && !rawEsp) {
+        combinedRaw = undefined;
+      } else if (!rawS && rawEsp) {
+        combinedRaw = rawEsp;
+      } else if (rawS && !rawEsp) {
+        combinedRaw = rawS;
+      } else {
+        // ambos presentes -> construir mapa con prioridad en subtitlesEsp para 'es'
+        const baseMap = normalizeToMap(rawS);
+        // si subtitlesEsp es string u objeto, extraer URL
+        if (typeof rawEsp === 'string') baseMap['es'] = rawEsp;
+        else if (typeof rawEsp === 'object') {
+          const v = rawEsp as Record<string, any>;
+          const url = (v.url || v.src || v.path || v.file || v.href) as string | undefined;
+          if (url) baseMap['es'] = url;
+        }
+        combinedRaw = baseMap;
+      }
+
+      const subsMap = normalizeToMap(combinedRaw);
       for (const [lang, url] of Object.entries(subsMap)) {
         if (!mounted) return;
         if (!url) {
@@ -175,7 +197,8 @@ export const Movie: React.FC = () => {
       srtCache.current.clear();
       setSubtitleUrls({});
     };
-  }, [movie?.subtitles]);
+  }, [movie?.subtitles, movie?.subtitlesEsp]);
+
 
 
   // Comments (from backend)
@@ -223,24 +246,73 @@ export const Movie: React.FC = () => {
     if (!video) return;
 
     const applyTracks = () => {
-      const tracks = video.textTracks;
-      for (let i = 0; i < tracks.length; i += 1) {
-        const t = tracks[i];
-        // desactivar por defecto
-        t.mode = 'disabled';
-        // activar si coincide idioma seleccionado
-        if ((subtitleLang === 'es' && t.language === 'es') || (subtitleLang === 'en' && t.language === 'en')) {
-          t.mode = 'showing';
+      try {
+        const tracks = video.textTracks;
+        if (!tracks || tracks.length === 0) return;
+
+        // desactivar todas primero
+        for (let i = 0; i < tracks.length; i++) tracks[i].mode = 'disabled';
+        if (subtitleLang === 'off') return;
+
+        const want = subtitleLang; // 'es' | 'en'
+        let foundIndex = -1;
+
+        // 1) buscar por language (srcLang / language)
+        for (let i = 0; i < tracks.length; i++) {
+          const t = tracks[i];
+          if (t.language && t.language.toLowerCase().startsWith(want)) {
+            foundIndex = i;
+            break;
+          }
         }
+
+        // 2) buscar por label (texto visible)
+        if (foundIndex === -1) {
+          const wantLabel = want === 'es' ? 'español' : want === 'en' ? 'english' : want;
+          for (let i = 0; i < tracks.length; i++) {
+            const t = tracks[i];
+            if (t.label && t.label.toLowerCase().includes(wantLabel)) {
+              foundIndex = i;
+              break;
+            }
+          }
+        }
+
+        // 3) Si piden 'en' y no hay coincidencia exacta, elegir la primera pista que no sea española
+        if (foundIndex === -1 && want === 'en') {
+          for (let i = 0; i < tracks.length; i++) {
+            const t = tracks[i];
+            const lang = (t.language || '').toLowerCase();
+            const label = (t.label || '').toLowerCase();
+            if (lang === 'es' || label.includes('español')) continue;
+            foundIndex = i;
+            break;
+          }
+        }
+
+        // 4) fallback final: escoger la primera pista disponible
+        if (foundIndex === -1) {
+          for (let i = 0; i < tracks.length; i++) {
+            if (tracks[i]) { foundIndex = i; break; }
+          }
+        }
+
+        if (foundIndex !== -1) tracks[foundIndex].mode = 'showing';
+      } catch (err) {
+        // no bloquear la UI si textTracks no está accesible
+        // console.debug('applyTracks error', err);
       }
     };
 
-    // aplicar ahora (si ya hay pistas)
+    // aplicarlo ahora y después de que el video cargue metadatos (pistas pueden aparecer tardíamente)
     applyTracks();
-    // y volver a aplicar cuando se carguen metadatos (pistas pueden aparecer después)
-    video.addEventListener('loadedmetadata', applyTracks);
+    const onLoaded = () => setTimeout(applyTracks, 50);
+    video.addEventListener('loadedmetadata', onLoaded);
+    video.addEventListener('loadeddata', onLoaded);
+
     return () => {
-      video.removeEventListener('loadedmetadata', applyTracks);
+      video.removeEventListener('loadedmetadata', onLoaded);
+      video.removeEventListener('loadeddata', onLoaded);
     };
   }, [subtitleLang, subtitleUrls]);
 
@@ -278,21 +350,7 @@ export const Movie: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    if (videoRef.current) {
-      const tracks = videoRef.current.textTracks;
-      for (let i = 0; i < tracks.length; i++) {
-        tracks[i].mode = 'disabled';
-        if (
-          (subtitleLang === 'es' && tracks[i].language === 'es') ||
-          (subtitleLang === 'en' && tracks[i].language === 'en')
-        ) {
-          tracks[i].mode = 'showing';
-        }
-      
-      }
-    }
-  }, [subtitleLang]);
+
 
   // POST comment (uses backend)
   const handleSubmitComment = async (e: React.FormEvent) => {
@@ -479,10 +537,10 @@ export const Movie: React.FC = () => {
           setMovie((prev) =>
             prev
               ? {
-                  ...prev,
-                  rating: response.filmRating.averageRating,
-                  totalRatings: response.filmRating.totalRatings,
-                }
+                ...prev,
+                rating: response.filmRating.averageRating,
+                totalRatings: response.filmRating.totalRatings,
+              }
               : prev
           );
         }
@@ -507,10 +565,10 @@ export const Movie: React.FC = () => {
           setMovie((prev) =>
             prev
               ? {
-                  ...prev,
-                  rating: response.filmRating.averageRating,
-                  totalRatings: response.filmRating.totalRatings,
-                }
+                ...prev,
+                rating: response.filmRating.averageRating,
+                totalRatings: response.filmRating.totalRatings,
+              }
               : prev
           );
         }
@@ -672,74 +730,55 @@ export const Movie: React.FC = () => {
               preload="auto"
             >
               <source src={videoSrc} type="video/mp4" />
-              
-                {(() => {
-                  const rawSubs = (movie as any)?.subtitles;
-                  if (!rawSubs) return null;
 
-                  const detectLangFromUrl = (u: string) => {
-                    const lower = u.toLowerCase();
-                    if (lower.includes('.es.') || lower.endsWith('.es.srt') || lower.includes('-es.') || lower.includes('/es/')) return 'es';
-                    if (lower.includes('.en.') || lower.endsWith('.en.srt') || lower.includes('-en.') || lower.includes('/en/')) return 'en';
-                    return undefined;
-                  };
+              {(() => {
+                // English track (backend: movie.subtitles)
+                const rawEn = (movie as any)?.subtitles;
+                let enSrc: string | undefined;
+                if (rawEn) {
+                  enSrc = (subtitleUrls['en'] ?? (typeof rawEn === 'string' ? rawEn : (rawEn.url || rawEn.src || rawEn.path || rawEn.file || rawEn.href))) as string | undefined;
+                }
 
-                  const entries: Array<[string, string]> = [];
+                // Spanish track (backend: movie.subtitlesEsp)
+                const rawEs = (movie as any)?.subtitlesEsp ?? (movie as any)?.subtitles?.es ?? undefined;
+                let esSrc: string | undefined;
+                if (rawEs) {
+                  esSrc = (subtitleUrls['es'] ?? (typeof rawEs === 'string' ? rawEs : (rawEs.url || rawEs.src || rawEs.path || rawEs.file || rawEs.href))) as string | undefined;
+                }
 
-                  if (typeof rawSubs === 'string') {
-                    const url = rawSubs;
-                    const lang = detectLangFromUrl(url) || 'en';
-                    entries.push([lang, subtitleUrls[lang] ?? url]);
-                  } else if (Array.isArray(rawSubs)) {
-                    rawSubs.forEach((item: any, idx: number) => {
-                      let url: string | undefined;
-                      let lang: string | undefined;
-                      if (!item) return;
-                      if (typeof item === 'string') {
-                        url = item;
-                        lang = detectLangFromUrl(url) || String(idx);
-                      } else if (typeof item === 'object') {
-                        const v = item as Record<string, any>;
-                        url = (v.url || v.src || v.path || v.file || v.href) as string | undefined;
-                        lang = (v.lang || v.srclang || v.language) as string | undefined;
-                        if (!lang && url) lang = detectLangFromUrl(url);
-                      }
-                      if (url) entries.push([lang || String(idx), subtitleUrls[lang || String(idx)] ?? url]);
-                    });
-                  } else if (typeof rawSubs === 'object') {
-                    Object.entries(rawSubs).forEach(([k, v]) => {
-                      let url: string | undefined;
-                      if (!v) return;
-                      if (typeof v === 'string') url = v;
-                      else if (typeof v === 'object') {
-                        const obj = v as Record<string, any>;
-                        url = (obj.url || obj.src || obj.path || obj.file || obj.href) as string | undefined;
-                      } else url = String(v);
-                      if (url) {
-                        const langKey = String(k);
-                        entries.push([langKey, subtitleUrls[langKey] ?? url]);
-                      }
-                    });
-                  }
+                // <-- aquí se cambió el tipo: usar React.ReactElement[] en vez de JSX.Element[] -->
+                const tracks: React.ReactElement[] = [];
 
-                  return entries.map(([langKey, src], i) => {
-                    if (!src) return null;
-                    const lc = String(langKey || '').toLowerCase();
-                    const label = lc === 'es' || lc.startsWith('es-') ? 'Español' : lc === 'en' || lc.startsWith('en-') ? 'English' : `Sub ${i + 1}`;
-                    const srclang = /^[a-z]{2}(-[A-Z]{2})?$/.test(lc) ? lc : undefined;
-                    return (
-                      <track
-                        key={`${langKey}-${i}`}
-                        kind="subtitles"
-                        label={label}
-                        {...(srclang ? { srcLang: srclang } : {})}
-                        src={String(src)}
-                      />
-                    );
-                  });
-                })()}
-                Tu navegador no soporta el elemento video.
-              </video>
+                if (enSrc) {
+                  tracks.push(
+                    <track
+                      key="sub-en"
+                      kind="subtitles"
+                      label="English"
+                      srcLang="en"
+                      src={String(enSrc)}
+                    />
+                  );
+                }
+
+                if (esSrc) {
+                  tracks.push(
+                    <track
+                      key="sub-es"
+                      kind="subtitles"
+                      label="Español"
+                      srcLang="es"
+                      src={String(esSrc)}
+                    />
+                  );
+                }
+
+                return tracks.length > 0 ? tracks : null;
+              })()}
+
+
+              Tu navegador no soporta el elemento video.
+            </video>
           </div>
         </section>
 
@@ -842,15 +881,13 @@ export const Movie: React.FC = () => {
                     <button
                       key={star}
                       type="button"
-                      className={`star ${
-                        star <= (hoverRating || userRating) ? 'active' : ''
-                      }`}
+                      className={`star ${star <= (hoverRating || userRating) ? 'active' : ''
+                        }`}
                       onClick={() => handleRating(star)}
                       onMouseEnter={() => setHoverRating(star)}
                       onMouseLeave={() => setHoverRating(0)}
-                      aria-label={`Calificar con ${star} estrella${
-                        star > 1 ? 's' : ''
-                      }`}
+                      aria-label={`Calificar con ${star} estrella${star > 1 ? 's' : ''
+                        }`}
                       role="radio"
                       aria-checked={star === userRating}
                     >
@@ -901,9 +938,8 @@ export const Movie: React.FC = () => {
                 return (
                   <article
                     key={comment._id}
-                    className={`comment-item ${
-                      editingId === comment._id ? 'is-editing' : ''
-                    }`}
+                    className={`comment-item ${editingId === comment._id ? 'is-editing' : ''
+                      }`}
                     role="listitem"
                   >
                     <div className="comment-header">
@@ -926,9 +962,8 @@ export const Movie: React.FC = () => {
                             ></button>
 
                             <div
-                              className={`options-popover ${
-                                openActions[comment._id] ? 'open' : ''
-                              }`}
+                              className={`options-popover ${openActions[comment._id] ? 'open' : ''
+                                }`}
                               role="menu"
                               aria-hidden={!openActions[comment._id]}
                               data-popover
